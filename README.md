@@ -115,3 +115,4 @@ themselves or screenshots of them.
 2. Allow user to delete and add any desired package:
     - checks will be done on core pacakges
     - configuration will be applied dynamically
+

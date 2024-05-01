@@ -28,7 +28,7 @@ jobs:
       runner: ${{ vars.RUNNER }}
       config_options: >
         {
-        "VALIDATE_SHFMT": false
+        "VALIDATE_SHELL_SHFMT": false
         }
 
   get_pr_status:

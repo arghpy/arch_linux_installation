@@ -6,8 +6,8 @@ script for [Arch Linux](https://archlinux.org/).
 Several installation types are possible:
 - server
 - desktop:
-    * i3 desktop environment: [Home Page](https://i3wm.org/)
-    * gnome desktop environment: [Home Page](https://www.gnome.org/)
+  * i3 desktop environment: [Home Page](https://i3wm.org/)
+  * gnome desktop environment: [Home Page](https://www.gnome.org/)
 
 Minimum dependencies are necessary in order to install
 the system.
@@ -27,20 +27,20 @@ Only for server installations where those won't matter.
 
 1. Download the latest [Arch Linux Iso](https://archlinux.org/download/)
 2. Burn it to an USB stick:
-    * **Windows**: [rufus](https://rufus.ie/en/)
-    * **Linux**:
-        - *Graphical*: [Balena Etcher](https://etcher.balena.io/)
-        - *Command Line*:
+  * **Windows**: [rufus](https://rufus.ie/en/)
+  * **Linux**:
+    - *Graphical*: [Balena Etcher](https://etcher.balena.io/)
+    - *Command-Line*:
 
-        Wipe disk:
-        ```shell
-        wipefs --all /dev/<disk>
-        ```
+    Wipe disk:
+    ```shell
+    wipefs --all /dev/<disk>
+    ```
 
-        Write iso to disk:
-        ```shell
-        dd if=/path/to/iso of=/dev/<disk> status=progress
-        ```
+    Write iso to disk:
+    ```shell
+    dd if=/path/to/iso of=/dev/<disk> status=progress
+    ```
 3. Boot the system with bootable USB stick
 
 > [!NOTE]
@@ -113,7 +113,5 @@ themselves or screenshots of them.
 
 1. Allow user to opt in/out of applying configuration
 2. Allow user to delete and add any desired package:
-    - checks will be done on core pacakges
-    - configuration will be applied dynamically
-
-
+  - checks will be done on core packages
+  - configuration will be applied dynamically

@@ -37,3 +37,4 @@ xorg-xinput,repo,Xorg for processing inputs
 xorg-xrandr,repo,Xorg for managaing windows
 xss-lock,repo,Xorg locking
 xwallpaper,repo,Xorg for wallpapers
+maim,repo,For screenshots

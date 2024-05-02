@@ -1,5 +1,7 @@
 # Arch Generic installation
 
+[![Super-Linter](https://github.com/arghpy/arch_linux_installation/actions/workflows/manage_pull_requests.yaml/badge.svg)](https://github.com/marketplace/actions/super-linter)
+
 This is a project that provides an installation
 script for [Arch Linux](https://archlinux.org/).
 

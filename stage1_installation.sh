@@ -69,6 +69,7 @@ function configuring_pacman(){
     log_info "Configuring pacman"
 
     CORES="$(nproc)"
+    # shellcheck disable=SC2086
     if [ $CORES -gt 1 ]; then
         ((CORES -= 1))
     fi

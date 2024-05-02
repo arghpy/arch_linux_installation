@@ -4,10 +4,11 @@ This is a project that provides an installation
 script for [Arch Linux](https://archlinux.org/).
 
 Several installation types are possible:
+
 - server
 - desktop:
-  * i3 desktop environment: [Home Page](https://i3wm.org/)
-  * gnome desktop environment: [Home Page](https://www.gnome.org/)
+  - i3 desktop environment: [Home Page](https://i3wm.org/)
+  - gnome desktop environment: [Home Page](https://www.gnome.org/)
 
 Minimum dependencies are necessary in order to install
 the system.
@@ -27,20 +28,24 @@ Only for server installations where those won't matter.
 
 1. Download the latest [Arch Linux Iso](https://archlinux.org/download/)
 2. Burn it to an USB stick:
-  * **Windows**: [rufus](https://rufus.ie/en/)
-  * **Linux**:
-    - *Graphical*: [Balena Etcher](https://etcher.balena.io/)
-    - *Command-Line*:
+
+- **Windows**: [rufus](https://rufus.ie/en/)
+- **Linux**:
+  - *Graphical*: [Balena Etcher](https://etcher.balena.io/)
+  - *Command-Line*:
 
     Wipe disk:
+
     ```shell
     wipefs --all /dev/<disk>
     ```
 
     Write iso to disk:
+
     ```shell
     dd if=/path/to/iso of=/dev/<disk> status=progress
     ```
+
 3. Boot the system with bootable USB stick
 
 > [!NOTE]
@@ -60,7 +65,9 @@ pacman -Sy git
 
 > [!WARNING]
 > In case there are problems with signing keys:
+>
 > - disable signature checking
+>
 > ```shell
 > sed --rexexp-extended --in-place "s|^SigLevel.*|SigLevel = Never|g" /etc/pacman.conf
 > ```
@@ -108,10 +115,10 @@ less -R <log_file>
 Please submit errors in the form of issues. Attach the logs
 themselves or screenshots of them.
 
-
 ## Wishlist
 
 1. Allow user to opt in/out of applying configuration
 2. Allow user to delete and add any desired package:
-  - checks will be done on core packages
-  - configuration will be applied dynamically
+
+- checks will be done on core packages
+- configuration will be applied dynamically

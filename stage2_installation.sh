@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# shellcheck disable=1090
+# shellcheck disable=SC1090
 
 TEMP_DIR="$(dirname "${0}")"
 SCRIPT_NAME="$(basename "${0}")"
@@ -200,7 +200,7 @@ function yay_install() {
 	exit_on_error sudo -u "${NAME}" makepkg --noconfirm -si || return 1
     popd || exit 1
 
-    # shellcheck disable=2046
+    # shellcheck disable=SC2046
     if [[ "${DESKTOP}" = "yes" ]] && [ -n "${DE}" ] && grep --quiet 'AUR' "${DE_PACKAGES}"; then
         log_info "Installing AUR packages"
         exit_on_error sudo -u "${NAME}" yay --noconfirm -S $(awk -F ',' '/AUR/ {printf "%s ", $1}' "${DE_PACKAGES}")

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# shellcheck disable=1090
+# shellcheck disable=SC1090
 
 CWD="$(pwd)"
 SCRIPT_NAME="$(basename "${0}")"
@@ -119,7 +119,7 @@ function disks() {
     MIN_DISK_SIZE=42949672960
     DISK_SIZE=$(lsblk --bytes --nodeps --noheadings --output SIZE "/dev/${DISK}")
 
-    # shellcheck disable=2086
+    # shellcheck disable=SC2086
     if ! [ ${DISK_SIZE} -ge ${MIN_DISK_SIZE} ]; then
         log_error "Disk ${DISK} should be at least 40GiB."
         exit 1

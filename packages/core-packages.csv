@@ -1,0 +1,16 @@
+arch-install-scripts,repo,Installing scripts
+archlinux-keyring,repo,Install keyring
+base-devel,repo,The base-devel packages
+base,repo,The base packages
+bash-completion,repo,Bash completion
+git,repo,SCV Software
+htop,repo,Modern top utility
+linux-firmware,repo,Firmware for different components
+linux,repo,Linux Kernel
+networkmanager,repo,Network Manager
+openssh,repo,SSH server
+polkit,repo,Manages user policies
+sudo,repo,manages admin rights
+unzip,repo,Archive tool
+vim,repo,Powerful keyboard based editor
+wget,repo,command-line utility for downloading files from the web

@@ -233,6 +233,7 @@ function yay_install() {
     rm -rf "/home/${NAME}/git_clone/"
     rm -rf "/home/${NAME}/.git"
     rm -rf "/home/${NAME}/.github"
+    rm -rf "/home/${NAME}/.linters_config"
     rm -f "/home/${NAME}/README.md"
 
     if [[ "${DE}" != "i3" ]]; then

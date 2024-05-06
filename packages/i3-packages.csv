@@ -17,6 +17,7 @@ neovim,repo,Terminal text editor
 network-manager-applet,repo,Network Manager applet
 npm,repo,NodeJS used in neovim
 pa-applet-git,AUR,PulseAudio Applet
+brightness-controller-git,AUR,Controll brightness
 pamixer,repo,Terminal based audio control
 pavucontrol,repo,Graphical interface for audio control
 picom,repo,Server for managing graphics
@@ -38,3 +39,4 @@ xorg-xrandr,repo,Xorg for managaing windows
 xss-lock,repo,Xorg locking
 xwallpaper,repo,Xorg for wallpapers
 maim,repo,For screenshots
+arandr,repo,Manage displays

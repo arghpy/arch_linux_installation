@@ -159,12 +159,12 @@ function grub_configuration() {
     exit_on_error pacman --noconfirm --sync grub efibootmgr && \
       grub-install --target=x86_64-efi --efi-directory=/boot && \
       grub-mkconfig --output=/boot/grub/grub.cfg
-        elif [[ "${MODE}" = "BIOS" ]]; then
-          exit_on_error pacman --noconfirm --sync grub && \
-            grub-install /dev/"${DISK}" && \
-            grub-mkconfig --output=/boot/grub/grub.cfg
-                    else
-                      log_error "An error occured at grub step. Exiting"
+  elif [[ "${MODE}" = "BIOS" ]]; then
+    exit_on_error pacman --noconfirm --sync grub && \
+      grub-install /dev/"${DISK}" && \
+      grub-mkconfig --output=/boot/grub/grub.cfg
+  else
+    log_error "An error occured at grub step. Exiting"
   fi
 
   echo PASSED_GRUB_CONFIGURATION="PASSED" >> "${PASSED_ENV_VARS}"

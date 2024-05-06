@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-
 function log_colors()
 {
     RED='\033[0;31m'

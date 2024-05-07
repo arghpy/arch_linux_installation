@@ -148,6 +148,10 @@ function partitioning() {
     MODE="BIOS"
   fi
 
+  exit_on_error parted --script "/dev/${DISK}" mklabel gpt && \
+    parted --script "/dev/${DISK}" mkpart fat32 2048s 1GiB && \
+    parted --script "/dev/${DISK}" set 1 esp on
+
   if [[ "${LUKS_AND_LVM}" = "yes" ]]; then
     parted --script "/dev/${DISK}" mkpart ext4 1GiB 100%
     parted --script "/dev/${DISK}" align-check optimal 1 
@@ -175,10 +179,7 @@ function partitioning() {
     exit_on_error lvcreate -l 100%FREE vgroup -n home
   else
     # Make a GPT partitioning type - compatible with both UEFI and BIOS
-    exit_on_error parted --script "/dev/${DISK}" mklabel gpt && \
-      parted --script "/dev/${DISK}" mkpart fat32 2048s 1GiB && \
-      parted --script "/dev/${DISK}" set 1 esp on && \
-      parted --script "/dev/${DISK}" mkpart linux-swap 1GiB 5GiB && \
+    exit_on_error parted --script "/dev/${DISK}" mkpart linux-swap 1GiB 5GiB && \
       parted --script "/dev/${DISK}" mkpart ext4 5GiB 35GiB && \
       parted --script "/dev/${DISK}" mkpart ext4 35GiB 100% && \
       parted --script "/dev/${DISK}" align-check optimal 1 

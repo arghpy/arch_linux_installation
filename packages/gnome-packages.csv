@@ -17,3 +17,4 @@ tmux,repo,Multiplexer program
 ttf-jetbrains-mono-nerd,repo,Nerd font
 ttf-jetbrains-mono,repo,Font
 vlc,repo,Media Player
+grub,repo,Boot loader

@@ -151,17 +151,40 @@ function set_user() {
   log_ok "DONE"
 }
 
+function configure_luks_and_lvm() {
+  log_info "Configuring LUKS and LVM"
+
+  ORIG_STRING="$(grep "^HOOKS" /etc/mkinitcpio.conf)"
+  NEW_STRING="${ORIG_STRING//filesystem/encrypt lvm2 filesystem}"
+
+  log_info "Adding encrypt and lvm2 parameters to HOOKS in mkinitcpio.conf"
+  exit_on_error sed "s/${ORIG_STRING}/${NEW_STRING}/" /etc/mkinitcpio.conf
+
+  log_info "Regenerating initramfs"
+  exit_on_error mkinitcpio -P
+
+  log_info "Configuring the boot loader"
+  ENCRYPTED_PART_UUID="$(blkid | awk '/LUKS/ {gsub(/"/,""); print $2}')"
+
+  ORIG_STRING="$(grep "^GRUB_CMDLINE_LINUX_DEFAULT" /etc/default/grub)"
+  NEW_STRING="${ORIG_STRING//quiet/quiet cryptdevice=${ENCRYPTED_PART_UUID}:cryptlvm root=/dev/vgroup/root}"
+
+  exit_on_error sed "s/${ORIG_STRING}/${NEW_STRING}/" /etc/default/grub
+
+  echo PASSED_CONFIGURE_LUKS_AND_LVM="PASSED" >> "${PASSED_ENV_VARS}"
+  log_ok "DONE"
+}
+
 # Installing grub and creating configuration
 function grub_configuration() {
   log_info "Installing and configuring grub"
 
   if [[ "${MODE}" = "UEFI" ]]; then
-    exit_on_error pacman --noconfirm --sync grub efibootmgr && \
+    exit_on_error pacman --noconfirm --sync efibootmgr && \
       grub-install --target=x86_64-efi --efi-directory=/boot && \
       grub-mkconfig --output=/boot/grub/grub.cfg
   elif [[ "${MODE}" = "BIOS" ]]; then
-    exit_on_error pacman --noconfirm --sync grub && \
-      grub-install /dev/"${DISK}" && \
+    exit_on_error grub-install /dev/"${DISK}" && \
       grub-mkconfig --output=/boot/grub/grub.cfg
   else
     log_error "An error occured at grub step. Exiting"
@@ -291,15 +314,21 @@ function main(){
   [ -z "${PASSED_SET_HOSTNAME+x}" ] && set_hostname
   [ -z "${PASSED_CHANGE_ROOT_PASSWORD+x}" ] && change_root_password
   [ -z "${PASSED_SET_USER+x}" ] && set_user
-  [ -z "${PASSED_GRUB_CONFIGURATION+x}" ] && grub_configuration
-  [ -z "${PASSED_ENABLE_SERVICES+x}" ] && enable_services
-  [ -z "${PASSED_YAY_INSTALL+x}" ] && yay_install
-  [ -z "${PASSED_APPLY_CONFIGURATION+x}" ] && apply_configuration
 
   if [ "${DESKTOP}" = "yes" ] && [ -n "${DE}" ]; then
     [ -z "${PASSED_INSTALL_ADDITIONAL_PACKAGES+x}" ] && install_additional_packages
     [ -z "${PASSED_CONFIGURE_ADDITIONAL_PACKAGES+x}" ] && configure_additional_packages
   fi
+
+  if [ "${LUKS_AND_LVM}" = "yes" ] && \
+    [ "${MODE}" = "UEFI" ] && \
+    [ -z "${PASSED_CONFIGURE_LUKS_AND_LVM+x}" ]; then
+    configure_luks_and_lvm
+  fi
+  [ -z "${PASSED_GRUB_CONFIGURATION+x}" ] && grub_configuration
+  [ -z "${PASSED_ENABLE_SERVICES+x}" ] && enable_services
+  [ -z "${PASSED_YAY_INSTALL+x}" ] && yay_install
+  [ -z "${PASSED_APPLY_CONFIGURATION+x}" ] && apply_configuration
 
   log_ok "DONE"
   exec 1>&3 2>&4

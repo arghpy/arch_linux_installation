@@ -5,7 +5,7 @@ CWD="$(pwd)"
 SCRIPT_NAME="$(basename "${0}")"
 LOG_FILE="${CWD}/${SCRIPT_NAME}.log"
 PASSED_ENV_VARS="${CWD}/.${SCRIPT_NAME}.env"
-FUNCTIONS="${CWD}/functions/functions.sh"
+FUNCTIONS="functions.sh"
 CORE_PACKAGES="${CWD}/packages/core-packages.csv"
 CONFIG_FILE="${CWD}/config/installation_config.conf"
 
@@ -152,15 +152,19 @@ function partitioning() {
       if [[ "${LUKS_AND_LVM}" = "yes" ]]; then
         parted --script "/dev/${DISK}" mkpart ext4 1GiB 100%
         parted --script "/dev/${DISK}" align-check optimal 1 
+
         # Encrypt the second partition
-        log_info "Preparing encryption for ${DISK} disk"
-        while ! cryptsetup luksFormat "/dev/${DISK}2"; do
+        PARTITIONS="$(blkid --output device | grep "${DISK}" | sort)"
+        ENCRYPTED_DISK="$(echo "${PARTITIONS}" | sed -n '2p')"
+
+        log_info "Preparing encryption for ${ENCRYPTED_DISK} disk"
+        while ! cryptsetup luksFormat "/dev/${ENCRYPTED_DISK}"; do
           sleep 1
           log_warning "Accept (type YES) and be sure the passwords match"
         done
 
         # Proceed to create LVMs
-        cryptsetup open "/dev/${DISK}2" cryptlvm
+        cryptsetup open "/dev/${ENCRYPTED_DISK}" cryptlvm
         exit_on_error pvcreate /dev/mapper/cryptlvm
         exit_on_error vgcreate vgroup /dev/mapper/cryptlvm
         exit_on_error lvcreate -L 4G vgroup -n swap
@@ -227,14 +231,11 @@ function formatting() {
 function mounting() {
   log_info "Mounting partitions"
 
-  exit_on_error mkdir --parents /mnt && \
-    mount "${ROOT_P}" /mnt && \
-    mkdir --parents /mnt/home && \
-    mount "${HOME_P}" /mnt/home
+  exit_on_error mount --mkdir "${ROOT_P}" /mnt && \
+    mount --mkdir "${HOME_P}" /mnt/home
 
   [[ "${MODE}" = "UEFI" ]] && \
-    exit_on_error mkdir --parents /mnt/boot && \
-    mount "${BOOT_P}" /mnt/boot
+    exit_on_error mount --mkdir "${BOOT_P}" /mnt/boot
 
   echo PASSED_MOUNTING="PASSED" >> "${PASSED_ENV_VARS}"
   log_ok "DONE"
@@ -244,12 +245,12 @@ function mounting() {
 function install_core_packages(){
   log_info "Installing core packages on the new system"
 
-    # shellcheck disable=SC2046
-    exit_on_error pacstrap -K /mnt $(awk -F ',' '{printf "%s ", $1}' "${CORE_PACKAGES}")
+  # shellcheck disable=SC2046
+  exit_on_error pacstrap -K /mnt $(awk -F ',' '{printf "%s ", $1}' "${CORE_PACKAGES}")
 
-    echo PASSED_INSTALL_CORE_PACKAGES="PASSED" >> "${PASSED_ENV_VARS}"
-    log_ok "DONE"
-  }
+  echo PASSED_INSTALL_CORE_PACKAGES="PASSED" >> "${PASSED_ENV_VARS}"
+  log_ok "DONE"
+}
 
 # Generating fstab
 function generate_fstab(){
@@ -274,9 +275,9 @@ function enter_environment() {
   log_info "(STAGE 2) Entering new environment"
   exec 1>&3 2>&4
 
-    # shellcheck disable=SC2016
-    exit_on_error arch-chroot /mnt /bin/bash "${TEMP_DIR}/stage2_installation.sh" "${MODE}" "${DISK}"
-  }
+  # shellcheck disable=SC2016
+  exit_on_error arch-chroot /mnt /bin/bash "${TEMP_DIR}/stage2_installation.sh" "${MODE}" "${DISK}"
+}
 
 # MAIN
 function main() {
@@ -349,7 +350,7 @@ while [[ ! $# -eq 0 ]]; do
       ;;
   esac
   shift
-done
 
+done
 
 main

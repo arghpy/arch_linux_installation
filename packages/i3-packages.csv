@@ -40,3 +40,4 @@ xss-lock,repo,Xorg locking
 xwallpaper,repo,Xorg for wallpapers
 maim,repo,For screenshots
 arandr,repo,Manage displays
+grub,repo,Boot loader

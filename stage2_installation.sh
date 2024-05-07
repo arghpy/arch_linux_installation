@@ -171,7 +171,7 @@ function configure_luks_and_lvm() {
   exit_on_error mkinitcpio -P
 
   log_info "Set boot theme"
-  exit_on_error plymouth-set-default-theme -R script
+  exit_on_error plymouth-set-default-theme -R bgrt
 
   log_info "Configuring the boot loader"
   ENCRYPTED_PART_UUID="$(blkid | awk '/LUKS/ {gsub(/"/,""); print $2}')"

@@ -161,7 +161,7 @@ function configure_luks_and_lvm() {
   TEMP_FILE="$(mktemp)"
 
   awk -v ORIG="${ORIG_STRING}" -v NEW="${NEW_STRING}" '{
-    sub(/ORIG/, NEW)
+    sub(/^HOOKS/, NEW)
   }' /etc/mkinitcpio.conf > "${TEMP_FILE}"
   cat "${TEMP_FILE}" > /etc/mkinitcpio.conf
 
@@ -175,7 +175,7 @@ function configure_luks_and_lvm() {
   NEW_STRING="${ORIG_STRING//quiet/quiet cryptdevice=${ENCRYPTED_PART_UUID}:cryptlvm root=/dev/vgroup/root}"
 
   awk -v ORIG="${ORIG_STRING}" -v NEW="${NEW_STRING}" '{
-    sub(/ORIG/, NEW)
+    sub(/^GRUB_CMDLINE_LINUX_DEFAULT/, NEW)
   }' /etc/default/grub > "${TEMP_FILE}"
   cat "${TEMP_FILE}" > /etc/default/grub
 

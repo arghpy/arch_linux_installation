@@ -38,7 +38,7 @@ popd || exit 1
 
 DE_PACKAGES="packages/${DE}-packages.csv"
 
-if [  -z "${MODE}" ] || [ -z "${DISK}" ]; then
+if [ -z "${MODE}" ] || [ -z "${DISK}" ]; then
   log_error "Variables are not set. MODE: ${MODE}, DISK: ${DISK}" && exit 1
 fi
 
@@ -200,7 +200,7 @@ function grub_configuration() {
       grub-install --target=x86_64-efi --efi-directory=/boot && \
       grub-mkconfig --output=/boot/grub/grub.cfg
   elif [[ "${MODE}" = "BIOS" ]]; then
-    exit_on_error grub-install /dev/"${DISK}" && \
+    exit_on_error grub-install "/dev/${DISK}" && \
       grub-mkconfig --output=/boot/grub/grub.cfg
   else
     log_error "An error occured at grub step. Exiting"
@@ -340,7 +340,6 @@ function main(){
   fi
 
   if [ "${LUKS_AND_LVM}" = "yes" ] && \
-    [ "${MODE}" = "UEFI" ] && \
     [ -z "${PASSED_CONFIGURE_LUKS_AND_LVM+x}" ]; then
     configure_luks_and_lvm
   fi

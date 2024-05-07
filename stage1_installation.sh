@@ -12,7 +12,6 @@ CONFIG_FILE="${CWD}/config/installation_config.conf"
 # Logging the entire script and also outputing to terminal
 exec 3>&1 4>&2 > >(tee --append "${LOG_FILE}") 2>&1
 
-
 # Sourcing log functions
 # you need to be in functions directory for this sourcing to work
 pushd functions || exit 1
@@ -143,17 +142,10 @@ function partitioning() {
   log_info "Wiping the data on disk ${DISK}"
   exit_on_error wipefs --all "/dev/${DISK}"
 
-  if [[ -n $(ls /sys/firmware/efi/efivars 2>/dev/null) ]];then
+  if ls /sys/firmware/efi/efivars 2>/dev/null;then
     MODE="UEFI"
-    # Make a GPT partitioning type - compatible with UEFI
-    exit_on_error parted --script "/dev/${DISK}" mklabel gpt && \
-      parted --script "/dev/${DISK}" mkpart fat32 2048s 1GiB && \
-      parted --script "/dev/${DISK}" set 1 esp on
   else
     MODE="BIOS"
-    # Make a MBR partitioning type - compatible with BIOS
-    exit_on_error parted --script "/dev/${DISK}" mklabel msdos && \
-      parted --script "/dev/${DISK}" mkpart fat32 2048s 1GiB
   fi
 
   if [[ "${LUKS_AND_LVM}" = "yes" ]]; then
@@ -182,7 +174,11 @@ function partitioning() {
     exit_on_error lvcreate -L 30G vgroup -n root
     exit_on_error lvcreate -l 100%FREE vgroup -n home
   else
-    parted --script "/dev/${DISK}" mkpart linux-swap 1GiB 5GiB && \
+    # Make a GPT partitioning type - compatible with both UEFI and BIOS
+    exit_on_error parted --script "/dev/${DISK}" mklabel gpt && \
+      parted --script "/dev/${DISK}" mkpart fat32 2048s 1GiB && \
+      parted --script "/dev/${DISK}" set 1 esp on && \
+      parted --script "/dev/${DISK}" mkpart linux-swap 1GiB 5GiB && \
       parted --script "/dev/${DISK}" mkpart ext4 5GiB 35GiB && \
       parted --script "/dev/${DISK}" mkpart ext4 35GiB 100% && \
       parted --script "/dev/${DISK}" align-check optimal 1 

@@ -148,9 +148,7 @@ function partitioning() {
     MODE="BIOS"
   fi
 
-  exit_on_error parted --script "/dev/${DISK}" mklabel gpt && \
-    parted --script "/dev/${DISK}" mkpart fat32 2048s 1GiB && \
-    parted --script "/dev/${DISK}" set 1 esp on
+  exit_on_error parted --script "/dev/${DISK}" mkpart fat32 2048s 1GiB
 
   if [[ "${LUKS_AND_LVM}" = "yes" ]]; then
     parted --script "/dev/${DISK}" mkpart ext4 1GiB 100%

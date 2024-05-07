@@ -155,7 +155,7 @@ function configure_luks_and_lvm() {
   log_info "Configuring LUKS and LVM"
 
   ORIG_STRING="$(grep "^HOOKS" /etc/mkinitcpio.conf)"
-  NEW_STRING="${ORIG_STRING//filesystem/encrypt lvm2 filesystem}"
+  NEW_STRING="${ORIG_STRING//filesystem/plymouth encrypt lvm2 filesystem}"
 
   log_info "Adding encrypt and lvm2 parameters to HOOKS in mkinitcpio.conf"
   TEMP_FILE="$(mktemp)"
@@ -169,6 +169,9 @@ function configure_luks_and_lvm() {
 
   log_info "Regenerating initramfs"
   exit_on_error mkinitcpio -P
+
+  log_info "Set boot theme"
+  exit_on_error plymouth-set-default-theme -R script
 
   log_info "Configuring the boot loader"
   ENCRYPTED_PART_UUID="$(blkid | awk '/LUKS/ {gsub(/"/,""); print $2}')"

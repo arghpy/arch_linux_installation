@@ -165,7 +165,10 @@ function partitioning() {
 
         # Proceed to create LVMs
         log_info "Opening LUKS partition to create LVM"
-        cryptsetup open "${ENCRYPTED_DISK}" cryptlvm
+        while ! cryptsetup open "${ENCRYPTED_DISK}" cryptlvm; do
+          sleep 1
+          log_warning "Try entering again the previous LUKS password"
+        done
         exit_on_error pvcreate /dev/mapper/cryptlvm
         exit_on_error vgcreate vgroup /dev/mapper/cryptlvm
         exit_on_error lvcreate -L 4G vgroup -n swap

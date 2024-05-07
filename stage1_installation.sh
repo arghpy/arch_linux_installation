@@ -12,7 +12,6 @@ CONFIG_FILE="${CWD}/config/installation_config.conf"
 # Logging the entire script and also outputing to terminal
 exec 3>&1 4>&2 > >(tee --append "${LOG_FILE}") 2>&1
 
-
 # Sourcing log functions
 # you need to be in functions directory for this sourcing to work
 pushd functions || exit 1
@@ -143,50 +142,46 @@ function partitioning() {
   log_info "Wiping the data on disk ${DISK}"
   exit_on_error wipefs --all "/dev/${DISK}"
 
-  if [[ -n $(ls /sys/firmware/efi/efivars 2>/dev/null) ]];then
+  if ls /sys/firmware/efi/efivars > /dev/null 2>&1;then
     MODE="UEFI"
-    # Make a GPT partitioning type - compatible with UEFI
-    exit_on_error parted --script "/dev/${DISK}" mklabel gpt && \
-      parted --script "/dev/${DISK}" mkpart fat32 2048s 1GiB && \
-      parted --script "/dev/${DISK}" set 1 esp on && \
-      if [[ "${LUKS_AND_LVM}" = "yes" ]]; then
-        parted --script "/dev/${DISK}" mkpart ext4 1GiB 100%
-        parted --script "/dev/${DISK}" align-check optimal 1 
-
-        # Encrypt the second partition
-        PARTITIONS="$(blkid --output device | grep "${DISK}" | sort)"
-        ENCRYPTED_DISK="$(echo "${PARTITIONS}" | sed -n '2p')"
-
-        log_info "Preparing encryption for ${ENCRYPTED_DISK} disk"
-        while ! cryptsetup luksFormat "${ENCRYPTED_DISK}"; do
-          sleep 1
-          log_warning "Accept (type YES) and be sure the passwords match"
-        done
-
-        # Proceed to create LVMs
-        log_info "Opening LUKS partition to create LVM"
-        while ! cryptsetup open "${ENCRYPTED_DISK}" cryptlvm; do
-          sleep 1
-          log_warning "Try entering again the previous LUKS password"
-        done
-        exit_on_error pvcreate /dev/mapper/cryptlvm
-        exit_on_error vgcreate vgroup /dev/mapper/cryptlvm
-        exit_on_error lvcreate -L 4G vgroup -n swap
-        exit_on_error lvcreate -L 30G vgroup -n root
-        exit_on_error lvcreate -l 100%FREE vgroup -n home
-      else
-        parted --script "/dev/${DISK}" mkpart linux-swap 1GiB 5GiB && \
-          parted --script "/dev/${DISK}" mkpart ext4 5GiB 35GiB && \
-          parted --script "/dev/${DISK}" mkpart ext4 35GiB 100% && \
-          parted --script "/dev/${DISK}" align-check optimal 1 
-      fi
+    exit_on_error parted --script "/dev/${DISK}" mklabel gpt
   else
     MODE="BIOS"
-    # Make a MBR partitioning type - compatible with BIOS
-    exit_on_error parted --script "/dev/${DISK}" mklabel msdos && \
-      parted --script "/dev/${DISK}" mkpart primary ext4 2048s 35GiB && \
-      parted --script "/dev/${DISK}" mkpart primary linux-swap 35GiB 39GiB && \
-      parted --script "/dev/${DISK}" mkpart primary ext4 39GiB 100% && \
+    exit_on_error parted --script "/dev/${DISK}" mklabel msdos
+  fi
+
+  exit_on_error parted --script "/dev/${DISK}" mkpart primary fat32 2048s 1GiB
+
+  if [[ "${LUKS_AND_LVM}" = "yes" ]]; then
+    parted --script "/dev/${DISK}" mkpart primary ext4 1GiB 100%
+    parted --script "/dev/${DISK}" align-check optimal 1 
+
+    # Encrypt the second partition
+    PARTITIONS="$(blkid --output device | grep "${DISK}" | sort)"
+    ENCRYPTED_DISK="$(echo "${PARTITIONS}" | sed -n '2p')"
+
+    log_info "Preparing encryption for ${ENCRYPTED_DISK} disk"
+    while ! cryptsetup luksFormat "${ENCRYPTED_DISK}"; do
+      sleep 1
+      log_warning "Accept (type YES) and be sure the passwords match"
+    done
+
+    # Proceed to create LVMs
+    log_info "Opening LUKS partition to create LVM"
+    while ! cryptsetup open "${ENCRYPTED_DISK}" cryptlvm; do
+      sleep 1
+      log_warning "Try entering again the previous LUKS password"
+    done
+    exit_on_error pvcreate /dev/mapper/cryptlvm
+    exit_on_error vgcreate vgroup /dev/mapper/cryptlvm
+    exit_on_error lvcreate -L 4G vgroup -n swap
+    exit_on_error lvcreate -L 30G vgroup -n root
+    exit_on_error lvcreate -l 100%FREE vgroup -n home
+  else
+    # Make a GPT partitioning type - compatible with both UEFI and BIOS
+    exit_on_error parted --script "/dev/${DISK}" mkpart primary linux-swap 1GiB 5GiB && \
+      parted --script "/dev/${DISK}" mkpart primary ext4 5GiB 35GiB && \
+      parted --script "/dev/${DISK}" mkpart primary ext4 35GiB 100% && \
       parted --script "/dev/${DISK}" align-check optimal 1 
   fi
 
@@ -199,29 +194,20 @@ function formatting() {
 
   PARTITIONS="$(blkid --output device | grep "${DISK}" | sort)"
 
-  if [[ "${MODE}" = "UEFI" ]]; then
-      if [[ "${LUKS_AND_LVM}" = "yes" ]]; then
-        BOOT_P="/dev/${DISK}1"
-        exit_on_error mkfs.vfat -F32 "${BOOT_P}"
-
-        SWAP_P="/dev/vgroup/swap"
-        ROOT_P="/dev/vgroup/root"
-        HOME_P="/dev/vgroup/home"
-      else
-        BOOT_P="$(echo "${PARTITIONS}" | sed -n '1p')"
-        exit_on_error mkfs.vfat -F32 "${BOOT_P}"
-
-        SWAP_P="$(echo "${PARTITIONS}" | sed -n '2p')"
-        ROOT_P="$(echo "${PARTITIONS}" | sed -n '3p')"
-        HOME_P="$(echo "${PARTITIONS}" | sed -n '4p')"
-      fi
-  elif [[ "${MODE}" = "BIOS" ]]; then 
-    ROOT_P=$(echo "${PARTITIONS}" | sed -n '1p')
-    SWAP_P=$(echo "${PARTITIONS}" | sed -n '2p')
-    HOME_P=$(echo "${PARTITIONS}" | sed -n '3p')
+  if [[ "${LUKS_AND_LVM}" = "yes" ]]; then
+    BOOT_P="/dev/${DISK}1"
+    SWAP_P="/dev/vgroup/swap"
+    ROOT_P="/dev/vgroup/root"
+    HOME_P="/dev/vgroup/home"
+  else
+    BOOT_P="$(echo "${PARTITIONS}" | sed -n '1p')"
+    SWAP_P="$(echo "${PARTITIONS}" | sed -n '2p')"
+    ROOT_P="$(echo "${PARTITIONS}" | sed -n '3p')"
+    HOME_P="$(echo "${PARTITIONS}" | sed -n '4p')"
   fi
 
-  exit_on_error mkswap "${SWAP_P}" && \
+  exit_on_error mkfs.vfat -F32 "${BOOT_P}" && \
+    mkswap "${SWAP_P}" && \
     swapon "${SWAP_P}" && \
     mkfs.ext4 -F "${HOME_P}" && \
     mkfs.ext4 -F "${ROOT_P}"
@@ -236,10 +222,8 @@ function mounting() {
   log_info "Mounting partitions"
 
   exit_on_error mount --mkdir "${ROOT_P}" /mnt && \
-    mount --mkdir "${HOME_P}" /mnt/home
-
-  [[ "${MODE}" = "UEFI" ]] && \
-    exit_on_error mount --mkdir "${BOOT_P}" /mnt/boot
+    mount --mkdir "${HOME_P}" /mnt/home && \
+    mount --mkdir "${BOOT_P}" /mnt/boot
 
   echo PASSED_MOUNTING="PASSED" >> "${PASSED_ENV_VARS}"
   log_ok "DONE"

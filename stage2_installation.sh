@@ -161,8 +161,10 @@ function configure_luks_and_lvm() {
   TEMP_FILE="$(mktemp)"
 
   awk -v ORIG="${ORIG_STRING}" -v NEW="${NEW_STRING}" '{
-    sub(/^HOOKS/, NEW)
+    sub(/^HOOKS.*/, NEW)
+    print
   }' /etc/mkinitcpio.conf > "${TEMP_FILE}"
+
   cat "${TEMP_FILE}" > /etc/mkinitcpio.conf
 
   log_info "Regenerating initramfs"
@@ -175,8 +177,10 @@ function configure_luks_and_lvm() {
   NEW_STRING="${ORIG_STRING//quiet/quiet cryptdevice=${ENCRYPTED_PART_UUID}:cryptlvm root=/dev/vgroup/root}"
 
   awk -v ORIG="${ORIG_STRING}" -v NEW="${NEW_STRING}" '{
-    sub(/^GRUB_CMDLINE_LINUX_DEFAULT/, NEW)
+    sub(/^GRUB_CMDLINE_LINUX_DEFAULT.*/, NEW)
+    print
   }' /etc/default/grub > "${TEMP_FILE}"
+
   cat "${TEMP_FILE}" > /etc/default/grub
 
   echo PASSED_CONFIGURE_LUKS_AND_LVM="PASSED" >> "${PASSED_ENV_VARS}"

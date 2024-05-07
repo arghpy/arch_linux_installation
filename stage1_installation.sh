@@ -164,6 +164,7 @@ function partitioning() {
         done
 
         # Proceed to create LVMs
+        log_info "Opening LUKS partition to create LVM"
         cryptsetup open "${ENCRYPTED_DISK}" cryptlvm
         exit_on_error pvcreate /dev/mapper/cryptlvm
         exit_on_error vgcreate vgroup /dev/mapper/cryptlvm

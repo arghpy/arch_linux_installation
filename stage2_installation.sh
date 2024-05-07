@@ -158,7 +158,7 @@ function configure_luks_and_lvm() {
   NEW_STRING="${ORIG_STRING//filesystem/encrypt lvm2 filesystem}"
 
   log_info "Adding encrypt and lvm2 parameters to HOOKS in mkinitcpio.conf"
-  exit_on_error sed "s/${ORIG_STRING}/${NEW_STRING}/" /etc/mkinitcpio.conf
+  sed "s/${ORIG_STRING}/${NEW_STRING}/" /etc/mkinitcpio.conf
 
   log_info "Regenerating initramfs"
   exit_on_error mkinitcpio -P
@@ -169,7 +169,7 @@ function configure_luks_and_lvm() {
   ORIG_STRING="$(grep "^GRUB_CMDLINE_LINUX_DEFAULT" /etc/default/grub)"
   NEW_STRING="${ORIG_STRING//quiet/quiet cryptdevice=${ENCRYPTED_PART_UUID}:cryptlvm root=/dev/vgroup/root}"
 
-  exit_on_error sed "s/${ORIG_STRING}/${NEW_STRING}/" /etc/default/grub
+  sed "s/${ORIG_STRING}/${NEW_STRING}/" /etc/default/grub
 
   echo PASSED_CONFIGURE_LUKS_AND_LVM="PASSED" >> "${PASSED_ENV_VARS}"
   log_ok "DONE"

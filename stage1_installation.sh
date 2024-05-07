@@ -158,13 +158,13 @@ function partitioning() {
         ENCRYPTED_DISK="$(echo "${PARTITIONS}" | sed -n '2p')"
 
         log_info "Preparing encryption for ${ENCRYPTED_DISK} disk"
-        while ! cryptsetup luksFormat "/dev/${ENCRYPTED_DISK}"; do
+        while ! cryptsetup luksFormat "${ENCRYPTED_DISK}"; do
           sleep 1
           log_warning "Accept (type YES) and be sure the passwords match"
         done
 
         # Proceed to create LVMs
-        cryptsetup open "/dev/${ENCRYPTED_DISK}" cryptlvm
+        cryptsetup open "${ENCRYPTED_DISK}" cryptlvm
         exit_on_error pvcreate /dev/mapper/cryptlvm
         exit_on_error vgcreate vgroup /dev/mapper/cryptlvm
         exit_on_error lvcreate -L 4G vgroup -n swap

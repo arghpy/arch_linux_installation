@@ -8,6 +8,7 @@ PASSED_ENV_VARS=".${SCRIPT_NAME}.env"
 FUNCTIONS="functions.sh"
 CONFIG_FILE="installation_config.conf"
 LIGHTDM_CONF="99-switch-monitor.conf"
+SSH_HARDENING_DIR="config/sshd_config.d/"
 
 MODE="${1}"
 DISK="${2}"
@@ -278,6 +279,9 @@ function yay_install() {
       rm -rf "/home/${NAME}/.config/i3*"
       rm -f "/home/${NAME}/.xprofile"
     fi
+
+    log_info "Apply SSH hardening options"
+    exit_on_error cp --recursive "${SSH_HARDENING_DIR}" /etc/ssh/
 
     echo PASSED_APPLY_CONFIGURATION="PASSED" >> "${PASSED_ENV_VARS}"
     log_ok "DONE"

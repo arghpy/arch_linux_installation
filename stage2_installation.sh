@@ -178,7 +178,7 @@ function configure_luks_and_lvm() {
   ENCRYPTED_PART_UUID="$(blkid | awk '/LUKS/ {gsub(/"/,""); print $2}')"
 
   ORIG_STRING="$(grep "^GRUB_CMDLINE_LINUX_DEFAULT" /etc/default/grub)"
-  NEW_STRING="${ORIG_STRING//quiet/quiet cryptdevice=${ENCRYPTED_PART_UUID}:cryptlvm root=/dev/vgroup/root}"
+  NEW_STRING="${ORIG_STRING//quiet/quiet splash cryptdevice=${ENCRYPTED_PART_UUID}:cryptlvm root=/dev/vgroup/root}"
 
   awk -v ORIG="${ORIG_STRING}" -v NEW="${NEW_STRING}" '{
     sub(/^GRUB_CMDLINE_LINUX_DEFAULT.*/, NEW)

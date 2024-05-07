@@ -142,7 +142,7 @@ function partitioning() {
   log_info "Wiping the data on disk ${DISK}"
   exit_on_error wipefs --all "/dev/${DISK}"
 
-  if ls /sys/firmware/efi/efivars 2>/dev/null;then
+  if ls /sys/firmware/efi/efivars > /dev/null 2>&1;then
     MODE="UEFI"
   else
     MODE="BIOS"

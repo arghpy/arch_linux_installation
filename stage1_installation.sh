@@ -194,13 +194,13 @@ function formatting() {
 
   PARTITIONS="$(blkid --output device | grep "${DISK}" | sort)"
 
+  BOOT_P="$(echo "${PARTITIONS}" | sed -n '1p')"
+
   if [[ "${LUKS_AND_LVM}" = "yes" ]]; then
-    BOOT_P="/dev/${DISK}1"
     SWAP_P="/dev/vgroup/swap"
     ROOT_P="/dev/vgroup/root"
     HOME_P="/dev/vgroup/home"
   else
-    BOOT_P="$(echo "${PARTITIONS}" | sed -n '1p')"
     SWAP_P="$(echo "${PARTITIONS}" | sed -n '2p')"
     ROOT_P="$(echo "${PARTITIONS}" | sed -n '3p')"
     HOME_P="$(echo "${PARTITIONS}" | sed -n '4p')"

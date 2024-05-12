@@ -16,3 +16,4 @@ vim,repo,Powerful keyboard based editor
 wget,repo,command-line utility for downloading files from the web
 lvm2,repo,Manage LVM
 plymouth,repo,More manageable boot process
+rsync,repo,Advance copying mechanism for remote and local systems

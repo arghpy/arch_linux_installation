@@ -9,6 +9,7 @@ linux-firmware,repo,Firmware for different components
 linux,repo,Linux Kernel
 networkmanager,repo,Network Manager
 openssh,repo,SSH server
+pacman-contrib,repo,Additional scripts to use with pacman
 polkit,repo,Manages user policies
 sudo,repo,manages admin rights
 unzip,repo,Archive tool

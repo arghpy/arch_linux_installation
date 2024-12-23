@@ -1,21 +1,22 @@
+android-file-transfer,repo,Access android phones
 arch-install-scripts,repo,Installing scripts
 archlinux-keyring,repo,Install keyring
-base-devel,repo,The base-devel packages
 base,repo,The base packages
+base-devel,repo,The base-devel packages
 bash-completion,repo,Bash completion
 git,repo,SCV Software
+grub,repo,Boot loader
 htop,repo,Modern top utility
-linux-firmware,repo,Firmware for different components
 linux,repo,Linux Kernel
+linux-firmware,repo,Firmware for different components
+lvm2,repo,Manage LVM
 networkmanager,repo,Network Manager
 openssh,repo,SSH server
 pacman-contrib,repo,Additional scripts to use with pacman
+plymouth,repo,More manageable boot process
 polkit,repo,Manages user policies
+rsync,repo,Advance copying mechanism for remote and local systems
 sudo,repo,manages admin rights
 unzip,repo,Archive tool
 vim,repo,Powerful keyboard based editor
 wget,repo,command-line utility for downloading files from the web
-lvm2,repo,Manage LVM
-plymouth,repo,More manageable boot process
-rsync,repo,Advance copying mechanism for remote and local systems
-android-file-transfer,repo,Access android phones

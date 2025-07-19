@@ -42,6 +42,67 @@ if [ -z "${MODE}" ] || [ -z "${DISK}" ]; then
   log_error "Variables are not set. MODE: ${MODE}, DISK: ${DISK}" && exit 1
 fi
 
+function check_config() {
+  [-z "${TIMEZONE+x}"] && \
+    log_error "Variable was not found in configuration file ${CONFIG_FILE}: TIMEZONE" && \
+    exit 1
+  [-z "${TIMEZONE}"] && log_error "Variable TIMEZONE cannot be empty." && exit 1
+  # all available time zones are in /usr/share/zoneinfo/
+  TIMEZONES="$(find -mindepth 2 -maxdepth 2 -type f -printf "%P\n" | grep -v 'posix\|right\|Etc')"
+  if ! echo "${TIMEZONES}" | grep "${TIMEZONE}"; then
+    log_error "Variable TIMEZONE must be one from /usr/share/zoneinfo/. Set as: ${TIMEZONE}"
+    log_info "Examples:"
+    echo "${TIMEZONES}"
+    exit 1
+  fi
+
+  [-z "${LANG+x}"] && \
+    log_error "Variable was not found in configuration file ${CONFIG_FILE}: LANG" && \
+    exit 1
+  [-z "${LANG}"] && log_error "Variable LANG cannot be empty." && exit 1
+  if ! grep "${LANG}" /etc/locale.gen; then
+    log_error "Variable LANG must be one from /etc/locale.gen file. Set as: ${TIMEZONE}"
+    exit 1
+  fi
+
+  [-z "${HOSTNAME+x}"] && \
+    log_error "Variable was not found in configuration file ${CONFIG_FILE}: HOSTNAME" && \
+    exit 1
+  [-z "${HOSTNAME}"] && log_error "Variable HOSTNAME cannot be empty." && exit 1
+
+  [-z "${LUKS_AND_LVM+x}"] && \
+    log_error "Variable was not found in configuration file ${CONFIG_FILE}: LUKS_AND_LVM" && \
+    exit 1
+  if [[ "${LUKS_AND_LVM}" != 'yes' && "${LUKS_AND_LVM}" != 'no' ]]; then
+    log_error "Variable LUKS_AND_LVM from ${CONFIG_FILE} must be either 'yes' or 'no'."
+    exit 1
+  fi
+
+  [-z "${SINGLE_PARTITION+x}"] && \
+    log_error "Variable was not found in configuration file ${CONFIG_FILE}: SINGLE_PARTITION" && \
+    exit 1
+  if [[ "${SINGLE_PARTITION}" != 'yes' && "${SINGLE_PARTITION}" != 'no' ]]; then
+    log_error "Variable SINGLE_PARTITION from ${CONFIG_FILE} must be either 'yes' or 'no'."
+    exit 1
+  fi
+
+  [-z "${DESKTOP+x}"] && \
+    log_error "Variable was not found in configuration file ${CONFIG_FILE}: DESKTOP" && \
+    exit 1
+  if [[ "${DESKTOP}" != 'yes' && "${DESKTOP}" != 'no' ]]; then
+    log_error "Variable DESKTOP from ${CONFIG_FILE} must be either 'yes' or 'no'."
+    exit 1
+  fi
+
+  [-z "${DE+x}"] && \
+    log_error "Variable was not found in configuration file ${CONFIG_FILE}: DE" && \
+    exit 1
+  if [[ "${DE}" != 'i3' && "${DE}" != 'gnome' ]]; then
+    log_error "Variable DE from ${CONFIG_FILE} must be either 'yes' or 'no'."
+    exit 1
+  fi
+}
+
 # Initializing keys and setting pacman
 function configuring_pacman(){
   log_info "Configuring pacman"
@@ -72,12 +133,12 @@ function configuring_pacman(){
 function set_time(){
   log_info "Setting up time"
 
-  if [ -n "${TIMEZONE}" ] && [ -f "/usr/share/zoneinfo/${TIMEZONE}" ]; then
+  if [ -f "/usr/share/zoneinfo/${TIMEZONE}" ]; then
     exit_on_error ln --symbolic --force "/usr/share/zoneinfo/${TIMEZONE}" /etc/localtime && \
       hwclock --systohc
-        else
-          exit_on_error ln --symbolic --force "/usr/share/zoneinfo/Europe/Bucharest" /etc/localtime && \
-            hwclock --systohc
+  else
+    log_error "Cannot set timezone ${TIMEZONE}. Look at function set_time() from stage2_installation."
+    exit 1
   fi
 
   echo PASSED_SET_TIME="PASSED" >> "${PASSED_ENV_VARS}"
@@ -87,10 +148,6 @@ function set_time(){
 # Changing the language to english
 function change_language(){
   log_info "Setting up language"
-
-  if [ -z "${LANG}" ]; then
-    LANG="en_US.UTF-8"
-  fi
 
   sed --in-place "/${LANG}/s|^#||" /etc/locale.gen
   echo "LANG=${LANG}" > /etc/locale.conf
@@ -103,10 +160,6 @@ function change_language(){
 # Setting the hostname
 function set_hostname(){
   log_info "Setting hostname to ${HOSTNAME}"
-
-  if [ -z "${HOSTNAME}" ]; then
-    HOSTNAME="archlinux"
-  fi
 
   echo "${HOSTNAME}" > /etc/hostname
 
@@ -315,9 +368,9 @@ function yay_install() {
         popd || exit 1
 
         log_ok "DONE"
-      elif [[ "${DE}" = "gnome" ]]; then
-        log_info "Enabling gdm service for gnome"
-        exit_on_error systemctl enable gdm
+    elif [[ "${DE}" = "gnome" ]]; then
+      log_info "Enabling gdm service for gnome"
+      exit_on_error systemctl enable gdm
     fi
 
     echo PASSED_CONFIGURE_ADDITONAL_PACKAGES="PASSED" >> "${PASSED_ENV_VARS}"
@@ -327,6 +380,7 @@ function yay_install() {
 # MAIN
 function main(){
   touch "${PASSED_ENV_VARS}"
+  check_config
   [ -z "${PASSED_CONFIGURING_PACMAN+x}" ] && configuring_pacman
   [ -z "${PASSED_SET_TIME+x}" ] && set_time
   [ -z "${PASSED_CHANGE_LANGUAGE+x}" ] && change_language

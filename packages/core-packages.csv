@@ -17,6 +17,7 @@ plymouth,repo,More manageable boot process
 polkit,repo,Manages user policies
 rsync,repo,Advance copying mechanism for remote and local systems
 sudo,repo,manages admin rights
+tmux,repo,Terminal multiplexer
 unzip,repo,Archive tool
 vim,repo,Powerful keyboard based editor
 wget,repo,command-line utility for downloading files from the web

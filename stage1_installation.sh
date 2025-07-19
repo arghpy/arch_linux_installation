@@ -60,8 +60,8 @@ EOF
 }
 
 function check_config() {
-  [-z "${TIMEZONE+x}"] && \
-    log_error "Variable was not found in configuration file ${CONFIG_FILE}: TIMEZONE" && \
+  [-z "${TIMEZONE+x}"] &&
+    log_error "Variable was not found in configuration file ${CONFIG_FILE}: TIMEZONE" &&
     exit 1
   [-z "${TIMEZONE}"] && log_error "Variable TIMEZONE cannot be empty." && exit 1
   # all available time zones are in /usr/share/zoneinfo/
@@ -73,8 +73,8 @@ function check_config() {
     exit 1
   fi
 
-  [-z "${LANG+x}"] && \
-    log_error "Variable was not found in configuration file ${CONFIG_FILE}: LANG" && \
+  [-z "${LANG+x}"] &&
+    log_error "Variable was not found in configuration file ${CONFIG_FILE}: LANG" &&
     exit 1
   [-z "${LANG}"] && log_error "Variable LANG cannot be empty." && exit 1
   if ! grep "${LANG}" /etc/locale.gen; then
@@ -82,37 +82,37 @@ function check_config() {
     exit 1
   fi
 
-  [-z "${HOSTNAME+x}"] && \
-    log_error "Variable was not found in configuration file ${CONFIG_FILE}: HOSTNAME" && \
+  [-z "${HOSTNAME+x}"] &&
+    log_error "Variable was not found in configuration file ${CONFIG_FILE}: HOSTNAME" &&
     exit 1
   [-z "${HOSTNAME}"] && log_error "Variable HOSTNAME cannot be empty." && exit 1
 
-  [-z "${LUKS_AND_LVM+x}"] && \
-    log_error "Variable was not found in configuration file ${CONFIG_FILE}: LUKS_AND_LVM" && \
+  [-z "${LUKS_AND_LVM+x}"] &&
+    log_error "Variable was not found in configuration file ${CONFIG_FILE}: LUKS_AND_LVM" &&
     exit 1
   if [[ "${LUKS_AND_LVM}" != 'yes' && "${LUKS_AND_LVM}" != 'no' ]]; then
     log_error "Variable LUKS_AND_LVM from ${CONFIG_FILE} must be either 'yes' or 'no'."
     exit 1
   fi
 
-  [-z "${SINGLE_PARTITION+x}"] && \
-    log_error "Variable was not found in configuration file ${CONFIG_FILE}: SINGLE_PARTITION" && \
+  [-z "${SINGLE_PARTITION+x}"] &&
+    log_error "Variable was not found in configuration file ${CONFIG_FILE}: SINGLE_PARTITION" &&
     exit 1
   if [[ "${SINGLE_PARTITION}" != 'yes' && "${SINGLE_PARTITION}" != 'no' ]]; then
     log_error "Variable SINGLE_PARTITION from ${CONFIG_FILE} must be either 'yes' or 'no'."
     exit 1
   fi
 
-  [-z "${DESKTOP+x}"] && \
-    log_error "Variable was not found in configuration file ${CONFIG_FILE}: DESKTOP" && \
+  [-z "${DESKTOP+x}"] &&
+    log_error "Variable was not found in configuration file ${CONFIG_FILE}: DESKTOP" &&
     exit 1
   if [[ "${DESKTOP}" != 'yes' && "${DESKTOP}" != 'no' ]]; then
     log_error "Variable DESKTOP from ${CONFIG_FILE} must be either 'yes' or 'no'."
     exit 1
   fi
 
-  [-z "${DE+x}"] && \
-    log_error "Variable was not found in configuration file ${CONFIG_FILE}: DE" && \
+  [-z "${DE+x}"] &&
+    log_error "Variable was not found in configuration file ${CONFIG_FILE}: DE" &&
     exit 1
   if [[ "${DE}" != 'i3' && "${DE}" != 'gnome' ]]; then
     log_error "Variable DE from ${CONFIG_FILE} must be either 'yes' or 'no'."
@@ -132,7 +132,7 @@ function check_internet() {
 }
 
 # Initializing keys and setting pacman
-function configuring_pacman(){
+function configuring_pacman() {
   log_info "Configuring pacman"
 
   CORES="$(nproc)"
@@ -203,7 +203,7 @@ function partitioning() {
   log_info "Wiping the data on disk ${DISK}"
   exit_on_error wipefs --all "/dev/${DISK}"
 
-  if ls /sys/firmware/efi/efivars > /dev/null 2>&1;then
+  if ls /sys/firmware/efi/efivars > /dev/null 2>&1; then
     MODE="UEFI"
     exit_on_error parted --script "/dev/${DISK}" mklabel gpt
   else
@@ -250,7 +250,7 @@ function partitioning() {
     if [[ "${SINGLE_PARTITION}" = "yes" ]]; then
       exit_on_error parted --script "/dev/${DISK}" mkpart primary ext4 5GiB 100%
     else
-      exit_on_error parted --script "/dev/${DISK}" mkpart primary ext4 5GiB 35GiB && \
+      exit_on_error parted --script "/dev/${DISK}" mkpart primary ext4 5GiB 35GiB &&
         parted --script "/dev/${DISK}" mkpart primary ext4 35GiB 100%
     fi
 
@@ -280,9 +280,9 @@ function formatting() {
     [[ "${SINGLE_PARTITION}" = "no" ]] && HOME_P="$(echo "${PARTITIONS}" | sed -n '4p')"
   fi
 
-  exit_on_error mkfs.vfat -F32 "${BOOT_P}" && \
-    mkswap "${SWAP_P}" && \
-    swapon "${SWAP_P}" && \
+  exit_on_error mkfs.vfat -F32 "${BOOT_P}" &&
+    mkswap "${SWAP_P}" &&
+    swapon "${SWAP_P}" &&
     mkfs.ext4 -F "${ROOT_P}"
 
   [[ "${SINGLE_PARTITION}" = "no" ]] && exit_on_error mkfs.ext4 -F "${HOME_P}"
@@ -296,7 +296,7 @@ function formatting() {
 function mounting() {
   log_info "Mounting partitions"
 
-  exit_on_error mount --mkdir "${ROOT_P}" /mnt && \
+  exit_on_error mount --mkdir "${ROOT_P}" /mnt &&
     mount --mkdir "${BOOT_P}" /mnt/boot
 
   [[ "${SINGLE_PARTITION}" = "no" ]] && exit_on_error mount --mkdir "${HOME_P}" /mnt/home
@@ -306,7 +306,7 @@ function mounting() {
 }
 
 # Installing packages
-function install_core_packages(){
+function install_core_packages() {
   log_info "Installing core packages on the new system"
 
   # shellcheck disable=SC2046
@@ -317,7 +317,7 @@ function install_core_packages(){
 }
 
 # Generating fstab
-function generate_fstab(){
+function generate_fstab() {
   log_info "Generating fstab"
 
   exit_on_error genfstab -U /mnt >> /mnt/etc/fstab
@@ -384,8 +384,8 @@ while [[ ! $# -eq 0 ]]; do
     -c | --clean)
       log_info "Starting cleaning"
 
-      umount --recursive /mnt 2>/dev/null
-      swapoff "${SWAP_P}" 2>/dev/null
+      umount --recursive /mnt 2> /dev/null
+      swapoff "${SWAP_P}" 2> /dev/null
       rm "${PASSED_ENV_VARS}"
 
       log_ok "DONE"

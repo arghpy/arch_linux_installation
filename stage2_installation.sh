@@ -43,8 +43,8 @@ if [ -z "${MODE}" ] || [ -z "${DISK}" ]; then
 fi
 
 function check_config() {
-  [-z "${TIMEZONE+x}"] && \
-    log_error "Variable was not found in configuration file ${CONFIG_FILE}: TIMEZONE" && \
+  [-z "${TIMEZONE+x}"] &&
+    log_error "Variable was not found in configuration file ${CONFIG_FILE}: TIMEZONE" &&
     exit 1
   [-z "${TIMEZONE}"] && log_error "Variable TIMEZONE cannot be empty." && exit 1
   # all available time zones are in /usr/share/zoneinfo/
@@ -56,8 +56,8 @@ function check_config() {
     exit 1
   fi
 
-  [-z "${LANG+x}"] && \
-    log_error "Variable was not found in configuration file ${CONFIG_FILE}: LANG" && \
+  [-z "${LANG+x}"] &&
+    log_error "Variable was not found in configuration file ${CONFIG_FILE}: LANG" &&
     exit 1
   [-z "${LANG}"] && log_error "Variable LANG cannot be empty." && exit 1
   if ! grep "${LANG}" /etc/locale.gen; then
@@ -65,37 +65,37 @@ function check_config() {
     exit 1
   fi
 
-  [-z "${HOSTNAME+x}"] && \
-    log_error "Variable was not found in configuration file ${CONFIG_FILE}: HOSTNAME" && \
+  [-z "${HOSTNAME+x}"] &&
+    log_error "Variable was not found in configuration file ${CONFIG_FILE}: HOSTNAME" &&
     exit 1
   [-z "${HOSTNAME}"] && log_error "Variable HOSTNAME cannot be empty." && exit 1
 
-  [-z "${LUKS_AND_LVM+x}"] && \
-    log_error "Variable was not found in configuration file ${CONFIG_FILE}: LUKS_AND_LVM" && \
+  [-z "${LUKS_AND_LVM+x}"] &&
+    log_error "Variable was not found in configuration file ${CONFIG_FILE}: LUKS_AND_LVM" &&
     exit 1
   if [[ "${LUKS_AND_LVM}" != 'yes' && "${LUKS_AND_LVM}" != 'no' ]]; then
     log_error "Variable LUKS_AND_LVM from ${CONFIG_FILE} must be either 'yes' or 'no'."
     exit 1
   fi
 
-  [-z "${SINGLE_PARTITION+x}"] && \
-    log_error "Variable was not found in configuration file ${CONFIG_FILE}: SINGLE_PARTITION" && \
+  [-z "${SINGLE_PARTITION+x}"] &&
+    log_error "Variable was not found in configuration file ${CONFIG_FILE}: SINGLE_PARTITION" &&
     exit 1
   if [[ "${SINGLE_PARTITION}" != 'yes' && "${SINGLE_PARTITION}" != 'no' ]]; then
     log_error "Variable SINGLE_PARTITION from ${CONFIG_FILE} must be either 'yes' or 'no'."
     exit 1
   fi
 
-  [-z "${DESKTOP+x}"] && \
-    log_error "Variable was not found in configuration file ${CONFIG_FILE}: DESKTOP" && \
+  [-z "${DESKTOP+x}"] &&
+    log_error "Variable was not found in configuration file ${CONFIG_FILE}: DESKTOP" &&
     exit 1
   if [[ "${DESKTOP}" != 'yes' && "${DESKTOP}" != 'no' ]]; then
     log_error "Variable DESKTOP from ${CONFIG_FILE} must be either 'yes' or 'no'."
     exit 1
   fi
 
-  [-z "${DE+x}"] && \
-    log_error "Variable was not found in configuration file ${CONFIG_FILE}: DE" && \
+  [-z "${DE+x}"] &&
+    log_error "Variable was not found in configuration file ${CONFIG_FILE}: DE" &&
     exit 1
   if [[ "${DE}" != 'i3' && "${DE}" != 'gnome' ]]; then
     log_error "Variable DE from ${CONFIG_FILE} must be either 'yes' or 'no'."
@@ -104,7 +104,7 @@ function check_config() {
 }
 
 # Initializing keys and setting pacman
-function configuring_pacman(){
+function configuring_pacman() {
   log_info "Configuring pacman"
 
   CORES="$(nproc)"
@@ -130,11 +130,11 @@ function configuring_pacman(){
 }
 
 # Setting up time
-function set_time(){
+function set_time() {
   log_info "Setting up time"
 
   if [ -f "/usr/share/zoneinfo/${TIMEZONE}" ]; then
-    exit_on_error ln --symbolic --force "/usr/share/zoneinfo/${TIMEZONE}" /etc/localtime && \
+    exit_on_error ln --symbolic --force "/usr/share/zoneinfo/${TIMEZONE}" /etc/localtime &&
       hwclock --systohc
   else
     log_error "Cannot set timezone ${TIMEZONE}. Look at function set_time() from stage2_installation."
@@ -146,7 +146,7 @@ function set_time(){
 }
 
 # Changing the language to english
-function change_language(){
+function change_language() {
   log_info "Setting up language"
 
   sed --in-place "/${LANG}/s|^#||" /etc/locale.gen
@@ -158,7 +158,7 @@ function change_language(){
 }
 
 # Setting the hostname
-function set_hostname(){
+function set_hostname() {
   log_info "Setting hostname to ${HOSTNAME}"
 
   echo "${HOSTNAME}" > /etc/hostname
@@ -171,7 +171,7 @@ function set_hostname(){
 function change_root_password() {
   log_info "Change root password"
 
-  while ! passwd ; do
+  while ! passwd; do
     sleep 1
   done
 
@@ -249,11 +249,11 @@ function grub_configuration() {
   log_info "Installing and configuring grub"
 
   if [[ "${MODE}" = "UEFI" ]]; then
-    exit_on_error pacman --noconfirm --sync efibootmgr && \
-      grub-install --target=x86_64-efi --efi-directory=/boot && \
+    exit_on_error pacman --noconfirm --sync efibootmgr &&
+      grub-install --target=x86_64-efi --efi-directory=/boot &&
       grub-mkconfig --output=/boot/grub/grub.cfg
   elif [[ "${MODE}" = "BIOS" ]]; then
-    exit_on_error grub-install "/dev/${DISK}" && \
+    exit_on_error grub-install "/dev/${DISK}" &&
       grub-mkconfig --output=/boot/grub/grub.cfg
   else
     log_error "An error occured at grub step. Exiting"
@@ -264,10 +264,10 @@ function grub_configuration() {
 }
 
 # Enabling services
-function enable_services(){
+function enable_services() {
   log_info "Enabling NetworkManager and sshd"
 
-  exit_on_error systemctl enable NetworkManager && \
+  exit_on_error systemctl enable NetworkManager &&
     systemctl enable sshd
 
   echo PASSED_ENABLE_SERVICES="PASSED" >> "${PASSED_ENV_VARS}"
@@ -288,97 +288,97 @@ function yay_install() {
       popd || exit 1
     }
 
-    log_info "Installing yay"
-    pushd "/home/${NAME}/.local/yay" || exit 1
-    exit_on_error sudo -u "${NAME}" makepkg --noconfirm -si || return 1
+  log_info "Installing yay"
+  pushd "/home/${NAME}/.local/yay" || exit 1
+  exit_on_error sudo -u "${NAME}" makepkg --noconfirm -si || return 1
+  popd || exit 1
+
+  # shellcheck disable=SC2046
+  if [[ "${DESKTOP}" = "yes" ]] && [ -n "${DE}" ] && grep --quiet 'AUR' "${DE_PACKAGES}"; then
+    log_info "Installing AUR packages"
+    exit_on_error sudo -u "${NAME}" yay --noconfirm -S $(awk -F ',' '/AUR/ {printf "%s ", $1}' "${DE_PACKAGES}")
+  fi
+
+  echo PASSED_YAY_INSTALL="PASSED" >> "${PASSED_ENV_VARS}"
+  log_ok "DONE"
+}
+
+function apply_configuration() {
+  log_info "Downloading and applying new configuration"
+
+  log_info "Cloning the configuration repository"
+  sudo -u "${NAME}" mkdir --parents "/home/${NAME}/git_clone"
+  pushd "/home/${NAME}/git_clone" || exit 1
+  exit_on_error sudo -u "${NAME}" git clone https://github.com/arghpy/dotfiles .
+  popd || exit 1
+
+  log_info "Cloning tmux plugin manager"
+  pushd "/home/${NAME}/" || exit 1
+  exit_on_error sudo -u "${NAME}" git clone https://github.com/tmux-plugins/tpm .tmux/plugins/tpm
+  popd || exit 1
+
+  log_info "Copying in configuration in ${NAME} home"
+  sudo -u "${NAME}" cp --recursive "/home/${NAME}/git_clone/"* "/home/${NAME}/"
+  sudo -u "${NAME}" cp --recursive "/home/${NAME}/git_clone/".* "/home/${NAME}/"
+
+  log_info "Removing clone repository"
+  rm -rf "/home/${NAME}/git_clone/"
+  rm -rf "/home/${NAME}/.git"
+  rm -rf "/home/${NAME}/.github"
+  rm -rf "/home/${NAME}/.linters_config"
+  rm -f "/home/${NAME}/README.md"
+
+  if [[ "${DE}" != "i3" ]]; then
+    rm -rf "/home/${NAME}/.config/i3*"
+    rm -f "/home/${NAME}/.xprofile"
+  fi
+
+  log_info "Apply SSH hardening options"
+  exit_on_error cp --recursive "${SSH_HARDENING_DIR}" /etc/ssh/
+
+  echo PASSED_APPLY_CONFIGURATION="PASSED" >> "${PASSED_ENV_VARS}"
+  log_ok "DONE"
+}
+
+function install_additional_packages() {
+  log_info "Installing additonal packages on the new system"
+
+  # shellcheck disable=SC2046
+  exit_on_error pacman --noconfirm --sync --refresh $(awk -F ',' '/repo/ {printf "%s ", $1}' "${DE_PACKAGES}")
+
+  log_info "Processing fonts"
+  exit_on_error fc-cache -f -v
+
+  echo PASSED_INSTALL_ADDITONAL_PACKAGES="PASSED" >> "${PASSED_ENV_VARS}"
+  log_ok "DONE"
+}
+
+function configure_additional_packages() {
+  log_info "Configuring additional packages"
+
+  if [[ "${DE}" = "i3" ]]; then
+    log_info "Configuring lightdm"
+
+    mkdir -p /etc/lightdm/lightdm.conf.d
+
+    # you need to be in functions directory for this sourcing to work
+    pushd config || exit 1
+    sed "s|user_account|${NAME}|g" "${LIGHTDM_CONF}" > "/etc/lightdm/lightdm.conf.d/${LIGHTDM_CONF}"
+    exit_on_error systemctl enable lightdm
     popd || exit 1
 
-    # shellcheck disable=SC2046
-    if [[ "${DESKTOP}" = "yes" ]] && [ -n "${DE}" ] && grep --quiet 'AUR' "${DE_PACKAGES}"; then
-      log_info "Installing AUR packages"
-      exit_on_error sudo -u "${NAME}" yay --noconfirm -S $(awk -F ',' '/AUR/ {printf "%s ", $1}' "${DE_PACKAGES}")
-    fi
-
-    echo PASSED_YAY_INSTALL="PASSED" >> "${PASSED_ENV_VARS}"
     log_ok "DONE"
-  }
+  elif [[ "${DE}" = "gnome" ]]; then
+    log_info "Enabling gdm service for gnome"
+    exit_on_error systemctl enable gdm
+  fi
 
-  function apply_configuration() {
-    log_info "Downloading and applying new configuration"
-
-    log_info "Cloning the configuration repository"
-    sudo -u "${NAME}" mkdir --parents "/home/${NAME}/git_clone"
-    pushd "/home/${NAME}/git_clone" || exit 1
-    exit_on_error sudo -u "${NAME}" git clone https://github.com/arghpy/dotfiles .
-    popd || exit 1
-
-    log_info "Cloning tmux plugin manager"
-    pushd "/home/${NAME}/" || exit 1
-    exit_on_error sudo -u "${NAME}" git clone https://github.com/tmux-plugins/tpm .tmux/plugins/tpm
-    popd || exit 1
-
-    log_info "Copying in configuration in ${NAME} home"
-    sudo -u "${NAME}" cp --recursive "/home/${NAME}/git_clone/"* "/home/${NAME}/"
-    sudo -u "${NAME}" cp --recursive "/home/${NAME}/git_clone/".* "/home/${NAME}/"
-
-    log_info "Removing clone repository"
-    rm -rf "/home/${NAME}/git_clone/"
-    rm -rf "/home/${NAME}/.git"
-    rm -rf "/home/${NAME}/.github"
-    rm -rf "/home/${NAME}/.linters_config"
-    rm -f "/home/${NAME}/README.md"
-
-    if [[ "${DE}" != "i3" ]]; then
-      rm -rf "/home/${NAME}/.config/i3*"
-      rm -f "/home/${NAME}/.xprofile"
-    fi
-
-    log_info "Apply SSH hardening options"
-    exit_on_error cp --recursive "${SSH_HARDENING_DIR}" /etc/ssh/
-
-    echo PASSED_APPLY_CONFIGURATION="PASSED" >> "${PASSED_ENV_VARS}"
-    log_ok "DONE"
-  }
-
-  function install_additional_packages() {
-    log_info "Installing additonal packages on the new system"
-
-    # shellcheck disable=SC2046
-    exit_on_error pacman --noconfirm --sync --refresh $(awk -F ',' '/repo/ {printf "%s ", $1}' "${DE_PACKAGES}")
-
-    log_info "Processing fonts"
-    exit_on_error fc-cache -f -v
-
-    echo PASSED_INSTALL_ADDITONAL_PACKAGES="PASSED" >> "${PASSED_ENV_VARS}"
-    log_ok "DONE"
-  }
-
-  function configure_additional_packages() {
-    log_info "Configuring additional packages"
-
-    if [[ "${DE}" = "i3" ]]; then
-      log_info "Configuring lightdm"
-
-      mkdir -p /etc/lightdm/lightdm.conf.d
-
-        # you need to be in functions directory for this sourcing to work
-        pushd config || exit 1
-        sed "s|user_account|${NAME}|g" "${LIGHTDM_CONF}" > "/etc/lightdm/lightdm.conf.d/${LIGHTDM_CONF}"
-        exit_on_error systemctl enable lightdm
-        popd || exit 1
-
-        log_ok "DONE"
-    elif [[ "${DE}" = "gnome" ]]; then
-      log_info "Enabling gdm service for gnome"
-      exit_on_error systemctl enable gdm
-    fi
-
-    echo PASSED_CONFIGURE_ADDITONAL_PACKAGES="PASSED" >> "${PASSED_ENV_VARS}"
-    log_ok "DONE"
-  }
+  echo PASSED_CONFIGURE_ADDITONAL_PACKAGES="PASSED" >> "${PASSED_ENV_VARS}"
+  log_ok "DONE"
+}
 
 # MAIN
-function main(){
+function main() {
   touch "${PASSED_ENV_VARS}"
   check_config
   [ -z "${PASSED_CONFIGURING_PACMAN+x}" ] && configuring_pacman
@@ -393,7 +393,7 @@ function main(){
     [ -z "${PASSED_CONFIGURE_ADDITIONAL_PACKAGES+x}" ] && configure_additional_packages
   fi
 
-  if [ "${LUKS_AND_LVM}" = "yes" ] && \
+  if [ "${LUKS_AND_LVM}" = "yes" ] &&
     [ -z "${PASSED_CONFIGURE_LUKS_AND_LVM+x}" ]; then
     configure_luks_and_lvm
   fi

@@ -55,7 +55,7 @@ function configuring_pacman(){
   CONF_FILE="/etc/pacman.conf"
 
   log_info "Increasing number of parallel downloads to ${CORES}"
-  sed --regexp-extended --in-place "s|^#ParallelDownloads.*|ParallelDownloads = ${CORES}|g" "${CONF_FILE}" 
+  sed --regexp-extended --in-place "s|^#ParallelDownloads.*|ParallelDownloads = ${CORES}|g" "${CONF_FILE}"
 
   log_info "Disabling for the moment signature checking"
   # Disable signature checking because it keeps failing for some unknown reason
@@ -304,7 +304,7 @@ function yay_install() {
     log_info "Configuring additional packages"
 
     if [[ "${DE}" = "i3" ]]; then
-      log_info "Configuring lightdm" 
+      log_info "Configuring lightdm"
 
       mkdir -p /etc/lightdm/lightdm.conf.d
 

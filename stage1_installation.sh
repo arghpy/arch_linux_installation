@@ -83,7 +83,7 @@ function configuring_pacman(){
   CONF_FILE="/etc/pacman.conf"
 
   log_info "Configuring pacman to use up to ${CORES} parallel downloads"
-  sed --regexp-extended --in-place "s|^#ParallelDownloads.*|ParallelDownloads = ${CORES}|g" "${CONF_FILE}" 
+  sed --regexp-extended --in-place "s|^#ParallelDownloads.*|ParallelDownloads = ${CORES}|g" "${CONF_FILE}"
 
   log_info "Refreshing sources"
   exit_on_error pacman --noconfirm --sync --refresh
@@ -154,7 +154,7 @@ function partitioning() {
 
   if [[ "${LUKS_AND_LVM}" = "yes" ]]; then
     parted --script "/dev/${DISK}" mkpart primary ext4 1GiB 100%
-    parted --script "/dev/${DISK}" align-check optimal 1 
+    parted --script "/dev/${DISK}" align-check optimal 1
 
     # Encrypt the second partition
     PARTITIONS="$(blkid --output device | grep "${DISK}" | sort)"
@@ -182,7 +182,7 @@ function partitioning() {
     exit_on_error parted --script "/dev/${DISK}" mkpart primary linux-swap 1GiB 5GiB && \
       parted --script "/dev/${DISK}" mkpart primary ext4 5GiB 35GiB && \
       parted --script "/dev/${DISK}" mkpart primary ext4 35GiB 100% && \
-      parted --script "/dev/${DISK}" align-check optimal 1 
+      parted --script "/dev/${DISK}" align-check optimal 1
   fi
 
   log_ok "DONE"

@@ -69,7 +69,7 @@ function check_config() {
   pushd /usr/share/zoneinfo/ > /dev/null || exit 1
   TIMEZONES="$(find -mindepth 2 -maxdepth 2 -type f -printf "%P\n" | grep -v 'posix\|right\|Etc')"
   popd > /dev/null || exit 1
-  if ! echo "${TIMEZONES}" | grep --quiet "${TIMEZONE}"; then
+  if ! echo "${TIMEZONES}" | grep --word-regexp --quiet "${TIMEZONE}"; then
     log_error "Variable TIMEZONE must be one from /usr/share/zoneinfo/. Set as: ${TIMEZONE}"
     log_info "Examples:"
     echo "${TIMEZONES}" | head -n5

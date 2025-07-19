@@ -48,7 +48,9 @@ function check_config() {
     exit 1
   [ -z "${TIMEZONE}" ] && log_error "Variable TIMEZONE cannot be empty." && exit 1
   # all available time zones are in /usr/share/zoneinfo/
+  pushd /usr/share/zoneinfo/ || exit 1
   TIMEZONES="$(find -mindepth 2 -maxdepth 2 -type f -printf "%P\n" | grep -v 'posix\|right\|Etc')"
+  popd || exit 1
   if ! echo "${TIMEZONES}" | grep "${TIMEZONE}"; then
     log_error "Variable TIMEZONE must be one from /usr/share/zoneinfo/. Set as: ${TIMEZONE}"
     log_info "Examples:"

@@ -71,7 +71,7 @@ pacman -Sy git
 > - disable signature checking
 >
 > ```shell
-> sed --rexexp-extended --in-place "s|^SigLevel.*|SigLevel = Never|g" /etc/pacman.conf
+> sed --regexp-extended --in-place "s|^SigLevel.*|SigLevel = Never|g" /etc/pacman.conf
 > ```
 
 3. Clone repository:

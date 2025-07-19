@@ -51,7 +51,7 @@ function check_config() {
   pushd /usr/share/zoneinfo/ > /dev/null || exit 1
   TIMEZONES="$(find -mindepth 2 -maxdepth 2 -type f -printf "%P\n" | grep -v 'posix\|right\|Etc')"
   popd > /dev/null || exit 1
-  if ! echo "${TIMEZONES}" | grep "${TIMEZONE}"; then
+  if ! echo "${TIMEZONES}" | grep --quiet "${TIMEZONE}"; then
     log_error "Variable TIMEZONE must be one from /usr/share/zoneinfo/. Set as: ${TIMEZONE}"
     log_info "Examples:"
     echo "${TIMEZONES}"
@@ -62,7 +62,7 @@ function check_config() {
     log_error "Variable was not found in configuration file ${CONFIG_FILE}: LANG" &&
     exit 1
   [ -z "${LANG}" ] && log_error "Variable LANG cannot be empty." && exit 1
-  if ! grep "${LANG}" /etc/locale.gen; then
+  if ! grep --quiet "${LANG}" /etc/locale.gen; then
     log_error "Variable LANG must be one from /etc/locale.gen file. Set as: ${TIMEZONE}"
     exit 1
   fi

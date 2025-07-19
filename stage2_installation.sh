@@ -9,6 +9,7 @@ FUNCTIONS="functions.sh"
 CONFIG_FILE="config/installation_config.conf"
 LIGHTDM_CONF="99-switch-monitor.conf"
 SSH_HARDENING_DIR="config/ssh/sshd_config.d/"
+SSH_PUB_ACCESS_KEY="config/ssh/ssh_pub_access_key_admin_user.gpg"
 CORE_PACKAGES="${CWD}/packages/core-packages.csv"
 
 MODE="${1}"
@@ -172,6 +173,19 @@ function set_user() {
 
   log_info "Creating ${NAME} user and adding it to wheel group"
   exit_on_error useradd --create-home --groups wheel --shell /bin/bash "${NAME}"
+
+  log_info "Copying ssh pub key to access admin user"
+  exit_on_error sudo -u "${NAME}" mkdir --mode=0700 --parents "/home/${NAME}/.ssh"
+
+  if file "${SSH_PUB_ACCESS_KEY}" | grep --quiet "PGP symmetric key encrypted data"; then
+    log_info "Decrypting file ${SSH_PUB_ACCESS_KEY} with gpg"
+    while ! gpg --pinentry-mode loopback --decrypt "${SSH_PUB_ACCESS_KEY}" >> "/home/${NAME}/.ssh/authorized_keys"; do
+      sleep 1
+    done
+    # rw-r--r
+    chmod 644 "/home/${NAME}/.ssh/authorized_keys"
+    chown "${NAME}:${NAME}" "/home/${NAME}/.ssh/authorized_keys"
+  fi
 
   log_info "Adding wheel to sudoers"
   echo "%wheel ALL=(ALL:ALL) ALL" > /etc/sudoers.d/01-wheel_group

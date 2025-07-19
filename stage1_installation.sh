@@ -80,7 +80,7 @@ function check_config() {
     log_error "Variable was not found in configuration file ${CONFIG_FILE}: LANG" &&
     exit 1
   [ -z "${LANG}" ] && log_error "Variable LANG cannot be empty." && exit 1
-  if ! grep --quiet "${LANG}" /etc/locale.gen; then
+  if ! grep --word-regexp --quiet "${LANG}" /etc/locale.gen; then
     log_error "Variable LANG must be one from /etc/locale.gen file. Set as: ${LANG}"
     exit 1
   fi

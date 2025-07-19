@@ -72,7 +72,7 @@ function check_config() {
   if ! echo "${TIMEZONES}" | grep --quiet "${TIMEZONE}"; then
     log_error "Variable TIMEZONE must be one from /usr/share/zoneinfo/. Set as: ${TIMEZONE}"
     log_info "Examples:"
-    echo "${TIMEZONES}"
+    echo "${TIMEZONES}" | head -n5
     exit 1
   fi
 

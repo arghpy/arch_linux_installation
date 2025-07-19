@@ -5,6 +5,7 @@ base,repo,The base packages
 base-devel,repo,The base-devel packages
 bash-completion,repo,Bash completion
 git,repo,SCV Software
+gnupg,repo,Encrypt and Decrypt
 grub,repo,Boot loader
 htop,repo,Modern top utility
 linux,repo,Linux Kernel

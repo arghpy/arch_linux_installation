@@ -81,7 +81,7 @@ function check_config() {
     exit 1
   [ -z "${LANG}" ] && log_error "Variable LANG cannot be empty." && exit 1
   if ! grep --quiet "${LANG}" /etc/locale.gen; then
-    log_error "Variable LANG must be one from /etc/locale.gen file. Set as: ${TIMEZONE}"
+    log_error "Variable LANG must be one from /etc/locale.gen file. Set as: ${LANG}"
     exit 1
   fi
 

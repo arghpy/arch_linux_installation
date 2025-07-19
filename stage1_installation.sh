@@ -105,22 +105,6 @@ function check_config() {
     log_error "Variable SINGLE_PARTITION from ${CONFIG_FILE} must be either 'yes' or 'no'."
     exit 1
   fi
-
-  [ -z "${DESKTOP+x}" ] &&
-    log_error "Variable was not found in configuration file ${CONFIG_FILE}: DESKTOP" &&
-    exit 1
-  if [[ "${DESKTOP}" != 'yes' && "${DESKTOP}" != 'no' ]]; then
-    log_error "Variable DESKTOP from ${CONFIG_FILE} must be either 'yes' or 'no'."
-    exit 1
-  fi
-
-  [ -z "${DE+x}" ] &&
-    log_error "Variable was not found in configuration file ${CONFIG_FILE}: DE" &&
-    exit 1
-  if [[ "${DE}" != 'i3' && "${DE}" != 'gnome' ]]; then
-    log_error "Variable DE from ${CONFIG_FILE} must be either 'yes' or 'no'."
-    exit 1
-  fi
 }
 
 # Check for internet

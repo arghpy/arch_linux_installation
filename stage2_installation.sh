@@ -23,8 +23,6 @@ if ! source "${CONFIG_FILE}"; then
   exit 1
 fi
 
-[ -n "${DE}" ] && DE_PACKAGES="packages/${DE}-packages.csv" || DE_PACKAGES=""
-
 # Logging the entire script
 exec 3>&1 4>&2 > >(tee -a "${LOG_FILE}") 2>&1
 
@@ -85,22 +83,6 @@ function check_config() {
     exit 1
   if [[ "${SINGLE_PARTITION}" != 'yes' && "${SINGLE_PARTITION}" != 'no' ]]; then
     log_error "Variable SINGLE_PARTITION from ${CONFIG_FILE} must be either 'yes' or 'no'."
-    exit 1
-  fi
-
-  [ -z "${DESKTOP+x}" ] &&
-    log_error "Variable was not found in configuration file ${CONFIG_FILE}: DESKTOP" &&
-    exit 1
-  if [[ "${DESKTOP}" != 'yes' && "${DESKTOP}" != 'no' ]]; then
-    log_error "Variable DESKTOP from ${CONFIG_FILE} must be either 'yes' or 'no'."
-    exit 1
-  fi
-
-  [ -z "${DE+x}" ] &&
-    log_error "Variable was not found in configuration file ${CONFIG_FILE}: DE" &&
-    exit 1
-  if [[ "${DE}" != 'i3' && "${DE}" != 'gnome' ]]; then
-    log_error "Variable DE from ${CONFIG_FILE} must be either 'yes' or 'no'."
     exit 1
   fi
 }
@@ -273,106 +255,13 @@ function enable_services() {
   log_ok "DONE"
 }
 
-#Install yay: script taken from Luke Smith
-function yay_install() {
-  log_info "Installing yay - AUR package manager"
-
-  log_info "Cloning yay repository"
-  sudo -u "${NAME}" mkdir -p "/home/${NAME}/.local/yay"
-  exit_on_error sudo -u "${NAME}" git -C "/home/${NAME}/.local" clone --depth 1 --single-branch \
-    --no-tags -q "https://aur.archlinux.org/yay.git" "/home/${NAME}/.local/yay" ||
-    {
-      pushd "/home/${NAME}/.local/yay" > /dev/null || exit 1
-      exit_on_error sudo -u "${NAME}" git pull --force origin master
-      popd > /dev/null || exit 1
-    }
-
-  log_info "Installing yay"
-  pushd "/home/${NAME}/.local/yay" > /dev/null || exit 1
-  exit_on_error sudo -u "${NAME}" makepkg --noconfirm -si || return 1
-  popd > /dev/null || exit 1
-
-  # shellcheck disable=SC2046
-  if [[ "${DESKTOP}" = "yes" ]] && [ -n "${DE}" ] && grep --quiet 'AUR' "${DE_PACKAGES}"; then
-    log_info "Installing AUR packages"
-    exit_on_error sudo -u "${NAME}" yay --noconfirm -S $(awk -F ',' '/AUR/ {printf "%s ", $1}' "${DE_PACKAGES}")
-  fi
-
-  echo PASSED_YAY_INSTALL="PASSED" >> "${PASSED_ENV_VARS}"
-  log_ok "DONE"
-}
-
 function apply_configuration() {
-  log_info "Downloading and applying new configuration"
-
-  log_info "Cloning the configuration repository"
-  sudo -u "${NAME}" mkdir --parents "/home/${NAME}/git_clone"
-  pushd "/home/${NAME}/git_clone" > /dev/null || exit 1
-  exit_on_error sudo -u "${NAME}" git clone https://github.com/arghpy/dotfiles .
-  popd > /dev/null || exit 1
-
-  log_info "Cloning tmux plugin manager"
-  pushd "/home/${NAME}/" > /dev/null || exit 1
-  exit_on_error sudo -u "${NAME}" git clone https://github.com/tmux-plugins/tpm .tmux/plugins/tpm
-  popd > /dev/null || exit 1
-
-  log_info "Copying in configuration in ${NAME} home"
-  sudo -u "${NAME}" cp --recursive "/home/${NAME}/git_clone/"* "/home/${NAME}/"
-  sudo -u "${NAME}" cp --recursive "/home/${NAME}/git_clone/".* "/home/${NAME}/"
-
-  log_info "Removing clone repository"
-  rm -rf "/home/${NAME}/git_clone/"
-  rm -rf "/home/${NAME}/.git"
-  rm -rf "/home/${NAME}/.github"
-  rm -rf "/home/${NAME}/.linters_config"
-  rm -f "/home/${NAME}/README.md"
-
-  if [[ "${DE}" != "i3" ]]; then
-    rm -rf "/home/${NAME}/.config/i3*"
-    rm -f "/home/${NAME}/.xprofile"
-  fi
+  log_info "Applying configuration"
 
   log_info "Apply SSH hardening options"
   exit_on_error cp --recursive "${SSH_HARDENING_DIR}" /etc/ssh/
 
   echo PASSED_APPLY_CONFIGURATION="PASSED" >> "${PASSED_ENV_VARS}"
-  log_ok "DONE"
-}
-
-function install_additional_packages() {
-  log_info "Installing additonal packages on the new system"
-
-  # shellcheck disable=SC2046
-  exit_on_error pacman --noconfirm --sync --refresh $(awk -F ',' '/repo/ {printf "%s ", $1}' "${DE_PACKAGES}")
-
-  log_info "Processing fonts"
-  exit_on_error fc-cache -f -v
-
-  echo PASSED_INSTALL_ADDITONAL_PACKAGES="PASSED" >> "${PASSED_ENV_VARS}"
-  log_ok "DONE"
-}
-
-function configure_additional_packages() {
-  log_info "Configuring additional packages"
-
-  if [[ "${DE}" = "i3" ]]; then
-    log_info "Configuring lightdm"
-
-    mkdir -p /etc/lightdm/lightdm.conf.d
-
-    # you need to be in functions directory for this sourcing to work
-    pushd config > /dev/null || exit 1
-    sed "s|user_account|${NAME}|g" "${LIGHTDM_CONF}" > "/etc/lightdm/lightdm.conf.d/${LIGHTDM_CONF}"
-    exit_on_error systemctl enable lightdm
-    popd > /dev/null || exit 1
-
-    log_ok "DONE"
-  elif [[ "${DE}" = "gnome" ]]; then
-    log_info "Enabling gdm service for gnome"
-    exit_on_error systemctl enable gdm
-  fi
-
-  echo PASSED_CONFIGURE_ADDITONAL_PACKAGES="PASSED" >> "${PASSED_ENV_VARS}"
   log_ok "DONE"
 }
 
@@ -387,21 +276,12 @@ function main() {
   [ -z "${PASSED_CHANGE_ROOT_PASSWORD+x}" ] && change_root_password
   [ -z "${PASSED_SET_USER+x}" ] && set_user
 
-  if [ "${DESKTOP}" = "yes" ] && [ -n "${DE}" ]; then
-    [ -z "${PASSED_INSTALL_ADDITIONAL_PACKAGES+x}" ] && install_additional_packages
-    [ -z "${PASSED_CONFIGURE_ADDITIONAL_PACKAGES+x}" ] && configure_additional_packages
-  fi
-
   if [ "${LUKS_AND_LVM}" = "yes" ] &&
     [ -z "${PASSED_CONFIGURE_LUKS_AND_LVM+x}" ]; then
     configure_luks_and_lvm
   fi
   [ -z "${PASSED_GRUB_CONFIGURATION+x}" ] && grub_configuration
   [ -z "${PASSED_ENABLE_SERVICES+x}" ] && enable_services
-
-  if grep --quiet 'AUR' "${CORE_PACKAGES}" "${DE_PACKAGES}"; then
-    [ -z "${PASSED_YAY_INSTALL+x}" ] && yay_install
-  fi
 
   [ -z "${PASSED_APPLY_CONFIGURATION+x}" ] && apply_configuration
 

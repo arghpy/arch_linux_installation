@@ -224,10 +224,7 @@ function configure_luks_and_lvm() {
 
   cat "${TEMP_FILE}" > /etc/mkinitcpio.conf
 
-  log_info "Regenerating initramfs"
-  exit_on_error mkinitcpio -P
-
-  log_info "Set boot theme"
+  log_info "Set boot luks theme and regenerate initial ramdisk"
   exit_on_error plymouth-set-default-theme -R bgrt
 
   log_info "Configuring the boot loader"

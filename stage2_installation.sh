@@ -8,7 +8,7 @@ PASSED_ENV_VARS=".${SCRIPT_NAME}.env"
 FUNCTIONS="functions.sh"
 CONFIG_FILE="config/installation_config.conf"
 LIGHTDM_CONF="99-switch-monitor.conf"
-SSH_HARDENING_DIR="config/sshd_config.d/"
+SSH_HARDENING_DIR="config/ssh/sshd_config.d/"
 CORE_PACKAGES="${CWD}/packages/core-packages.csv"
 
 MODE="${1}"
@@ -255,7 +255,7 @@ function apply_configuration() {
   log_info "Applying configuration"
 
   log_info "Apply SSH hardening options"
-  exit_on_error cp --recursive "${SSH_HARDENING_DIR}" /etc/ssh/
+  exit_on_error cp --recursive "${SSH_HARDENING_DIR}/*" /etc/ssh/sshd_config.d/
 
   echo PASSED_APPLY_CONFIGURATION="PASSED" >> "${PASSED_ENV_VARS}"
   log_ok "DONE"

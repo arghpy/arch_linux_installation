@@ -59,6 +59,67 @@ OPTIONS:
 EOF
 }
 
+function check_config() {
+  [-z "${TIMEZONE+x}"] && \
+    log_error "Variable was not found in configuration file ${CONFIG_FILE}: TIMEZONE" && \
+    exit 1
+  [-z "${TIMEZONE}"] && log_error "Variable TIMEZONE cannot be empty." && exit 1
+  # all available time zones are in /usr/share/zoneinfo/
+  TIMEZONES="$(find -mindepth 2 -maxdepth 2 -type f -printf "%P\n" | grep -v 'posix\|right\|Etc')"
+  if ! echo "${TIMEZONES}" | grep "${TIMEZONE}"; then
+    log_error "Variable TIMEZONE must be one from /usr/share/zoneinfo/. Set as: ${TIMEZONE}"
+    log_info "Examples:"
+    echo "${TIMEZONES}"
+    exit 1
+  fi
+
+  [-z "${LANG+x}"] && \
+    log_error "Variable was not found in configuration file ${CONFIG_FILE}: LANG" && \
+    exit 1
+  [-z "${LANG}"] && log_error "Variable LANG cannot be empty." && exit 1
+  if ! grep "${LANG}" /etc/locale.gen; then
+    log_error "Variable LANG must be one from /etc/locale.gen file. Set as: ${TIMEZONE}"
+    exit 1
+  fi
+
+  [-z "${HOSTNAME+x}"] && \
+    log_error "Variable was not found in configuration file ${CONFIG_FILE}: HOSTNAME" && \
+    exit 1
+  [-z "${HOSTNAME}"] && log_error "Variable HOSTNAME cannot be empty." && exit 1
+
+  [-z "${LUKS_AND_LVM+x}"] && \
+    log_error "Variable was not found in configuration file ${CONFIG_FILE}: LUKS_AND_LVM" && \
+    exit 1
+  if [[ "${LUKS_AND_LVM}" != 'yes' && "${LUKS_AND_LVM}" != 'no' ]]; then
+    log_error "Variable LUKS_AND_LVM from ${CONFIG_FILE} must be either 'yes' or 'no'."
+    exit 1
+  fi
+
+  [-z "${SINGLE_PARTITION+x}"] && \
+    log_error "Variable was not found in configuration file ${CONFIG_FILE}: SINGLE_PARTITION" && \
+    exit 1
+  if [[ "${SINGLE_PARTITION}" != 'yes' && "${SINGLE_PARTITION}" != 'no' ]]; then
+    log_error "Variable SINGLE_PARTITION from ${CONFIG_FILE} must be either 'yes' or 'no'."
+    exit 1
+  fi
+
+  [-z "${DESKTOP+x}"] && \
+    log_error "Variable was not found in configuration file ${CONFIG_FILE}: DESKTOP" && \
+    exit 1
+  if [[ "${DESKTOP}" != 'yes' && "${DESKTOP}" != 'no' ]]; then
+    log_error "Variable DESKTOP from ${CONFIG_FILE} must be either 'yes' or 'no'."
+    exit 1
+  fi
+
+  [-z "${DE+x}"] && \
+    log_error "Variable was not found in configuration file ${CONFIG_FILE}: DE" && \
+    exit 1
+  if [[ "${DE}" != 'i3' && "${DE}" != 'gnome' ]]; then
+    log_error "Variable DE from ${CONFIG_FILE} must be either 'yes' or 'no'."
+    exit 1
+  fi
+}
+
 # Check for internet
 function check_internet() {
   log_info "Check Internet"
@@ -175,14 +236,25 @@ function partitioning() {
     exit_on_error pvcreate /dev/mapper/cryptlvm
     exit_on_error vgcreate vgroup /dev/mapper/cryptlvm
     exit_on_error lvcreate -L 4G vgroup -n swap
-    exit_on_error lvcreate -L 30G vgroup -n root
-    exit_on_error lvcreate -l 100%FREE vgroup -n home
+
+    if [[ "${SINGLE_PARTITION}" = "yes" ]]; then
+      exit_on_error lvcreate -l 100%FREE vgroup -n root
+    else
+      exit_on_error lvcreate -L 30G vgroup -n root
+      exit_on_error lvcreate -l 100%FREE vgroup -n home
+    fi
   else
     # Make a GPT partitioning type - compatible with both UEFI and BIOS
-    exit_on_error parted --script "/dev/${DISK}" mkpart primary linux-swap 1GiB 5GiB && \
-      parted --script "/dev/${DISK}" mkpart primary ext4 5GiB 35GiB && \
-      parted --script "/dev/${DISK}" mkpart primary ext4 35GiB 100% && \
-      parted --script "/dev/${DISK}" align-check optimal 1
+    exit_on_error parted --script "/dev/${DISK}" mkpart primary linux-swap 1GiB 5GiB
+
+    if [[ "${SINGLE_PARTITION}" = "yes" ]]; then
+      exit_on_error parted --script "/dev/${DISK}" mkpart primary ext4 5GiB 100%
+    else
+      exit_on_error parted --script "/dev/${DISK}" mkpart primary ext4 5GiB 35GiB && \
+        parted --script "/dev/${DISK}" mkpart primary ext4 35GiB 100%
+    fi
+
+    exit_on_error parted --script "/dev/${DISK}" align-check optimal 1
   fi
 
   log_ok "DONE"
@@ -199,18 +271,21 @@ function formatting() {
   if [[ "${LUKS_AND_LVM}" = "yes" ]]; then
     SWAP_P="/dev/vgroup/swap"
     ROOT_P="/dev/vgroup/root"
-    HOME_P="/dev/vgroup/home"
+
+    [[ "${SINGLE_PARTITION}" = "no" ]] && HOME_P="/dev/vgroup/home"
   else
     SWAP_P="$(echo "${PARTITIONS}" | sed -n '2p')"
     ROOT_P="$(echo "${PARTITIONS}" | sed -n '3p')"
-    HOME_P="$(echo "${PARTITIONS}" | sed -n '4p')"
+
+    [[ "${SINGLE_PARTITION}" = "no" ]] && HOME_P="$(echo "${PARTITIONS}" | sed -n '4p')"
   fi
 
   exit_on_error mkfs.vfat -F32 "${BOOT_P}" && \
     mkswap "${SWAP_P}" && \
     swapon "${SWAP_P}" && \
-    mkfs.ext4 -F "${HOME_P}" && \
     mkfs.ext4 -F "${ROOT_P}"
+
+  [[ "${SINGLE_PARTITION}" = "no" ]] && exit_on_error mkfs.ext4 -F "${HOME_P}"
 
   echo PASSED_FORMATTING="PASSED" >> "${PASSED_ENV_VARS}"
   echo SWAP_P="${SWAP_P}" >> "${PASSED_ENV_VARS}"
@@ -222,8 +297,9 @@ function mounting() {
   log_info "Mounting partitions"
 
   exit_on_error mount --mkdir "${ROOT_P}" /mnt && \
-    mount --mkdir "${HOME_P}" /mnt/home && \
     mount --mkdir "${BOOT_P}" /mnt/boot
+
+  [[ "${SINGLE_PARTITION}" = "no" ]] && exit_on_error mount --mkdir "${HOME_P}" /mnt/home
 
   echo PASSED_MOUNTING="PASSED" >> "${PASSED_ENV_VARS}"
   log_ok "DONE"
@@ -271,6 +347,7 @@ function enter_environment() {
 function main() {
   log_info "(STAGE 1) Preparing the new installation"
   touch "${PASSED_ENV_VARS}"
+  check_config
   check_internet
   # Check if variable DISK is set or not: https://stackoverflow.com/questions/3601515/how-to-check-if-a-variable-is-set-in-bash
   [ -z "${PASSED_CONFIGURING_PACMAN+x}" ] && configuring_pacman

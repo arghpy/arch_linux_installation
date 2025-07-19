@@ -102,10 +102,6 @@ function configuring_pacman() {
   log_info "Increasing number of parallel downloads to ${CORES}"
   sed --regexp-extended --in-place "s|^#ParallelDownloads.*|ParallelDownloads = ${CORES}|g" "${CONF_FILE}"
 
-  log_info "Disabling for the moment signature checking"
-  # Disable signature checking because it keeps failing for some unknown reason
-  sed --regexp-extended --in-place "s|^SigLevel.*|SigLevel = Never|g" "${CONF_FILE}"
-
   log_info "Refreshing sources"
   exit_on_error pacman --noconfirm --sync --refresh
 
@@ -291,10 +287,6 @@ function main() {
   popd > /dev/null || exit 1
   log_info "Removing installation scripts"
   rm -rf "${TEMP_DIR}"
-
-  log_info "Re-enabling signature checking"
-  # Enable signature checking
-  sed --regexp-extended --in-place "s|^SigLevel.*|SigLevel    = Required DatabaseOptional|g" "${CONF_FILE}"
 }
 
 main

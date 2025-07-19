@@ -6,14 +6,24 @@ SCRIPT_NAME="$(basename "${0}")"
 LOG_FILE="${SCRIPT_NAME}.log"
 PASSED_ENV_VARS=".${SCRIPT_NAME}.env"
 FUNCTIONS="functions.sh"
-CONFIG_FILE="installation_config.conf"
+CONFIG_FILE="config/installation_config.conf"
 LIGHTDM_CONF="99-switch-monitor.conf"
 SSH_HARDENING_DIR="config/sshd_config.d/"
+CORE_PACKAGES="${CWD}/packages/core-packages.csv"
 
 MODE="${1}"
 DISK="${2}"
 
 pushd "${TEMP_DIR}" > /dev/null || exit 1
+
+# Sourcing configuration file
+# you need to be in config directory for this sourcing to work
+if ! source "${CONFIG_FILE}"; then
+  echo "Error! Could not source ${CONFIG_FILE}"
+  exit 1
+fi
+
+[ -n "${DE}" ] && DE_PACKAGES="packages/${DE}-packages.csv" || DE_PACKAGES=""
 
 # Logging the entire script
 exec 3>&1 4>&2 > >(tee -a "${LOG_FILE}") 2>&1
@@ -26,17 +36,6 @@ if ! source "${FUNCTIONS}"; then
   exit 1
 fi
 popd > /dev/null || exit 1
-
-# Sourcing configuration file
-# you need to be in config directory for this sourcing to work
-pushd config > /dev/null || exit 1
-if ! source "${CONFIG_FILE}"; then
-  echo "Error! Could not source ${CONFIG_FILE}"
-  exit 1
-fi
-popd > /dev/null || exit 1
-
-DE_PACKAGES="packages/${DE}-packages.csv"
 
 if [ -z "${MODE}" ] || [ -z "${DISK}" ]; then
   log_error "Variables are not set. MODE: ${MODE}, DISK: ${DISK}" && exit 1
@@ -399,7 +398,11 @@ function main() {
   fi
   [ -z "${PASSED_GRUB_CONFIGURATION+x}" ] && grub_configuration
   [ -z "${PASSED_ENABLE_SERVICES+x}" ] && enable_services
-  [ -z "${PASSED_YAY_INSTALL+x}" ] && yay_install
+
+  if grep --quiet 'AUR' "${CORE_PACKAGES}" "${DE_PACKAGES}"; then
+    [ -z "${PASSED_YAY_INSTALL+x}" ] && yay_install
+  fi
+
   [ -z "${PASSED_APPLY_CONFIGURATION+x}" ] && apply_configuration
 
   log_ok "DONE"

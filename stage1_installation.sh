@@ -14,12 +14,12 @@ exec 3>&1 4>&2 > >(tee --append "${LOG_FILE}") 2>&1
 
 # Sourcing log functions
 # you need to be in functions directory for this sourcing to work
-pushd functions || exit 1
+pushd functions > /dev/null || exit 1
 if ! source "${FUNCTIONS}"; then
   echo "Error! Could not source ${FUNCTIONS}"
   exit 1
 fi
-popd || exit 1
+popd > /dev/null || exit 1
 
 # Sourcing config file
 if ! source "${CONFIG_FILE}"; then
@@ -65,9 +65,9 @@ function check_config() {
     exit 1
   [ -z "${TIMEZONE}" ] && log_error "Variable TIMEZONE cannot be empty." && exit 1
   # all available time zones are in /usr/share/zoneinfo/
-  pushd /usr/share/zoneinfo/ || exit 1
+  pushd /usr/share/zoneinfo/ > /dev/null || exit 1
   TIMEZONES="$(find -mindepth 2 -maxdepth 2 -type f -printf "%P\n" | grep -v 'posix\|right\|Etc')"
-  popd || exit 1
+  popd > /dev/null || exit 1
   if ! echo "${TIMEZONES}" | grep "${TIMEZONE}"; then
     log_error "Variable TIMEZONE must be one from /usr/share/zoneinfo/. Set as: ${TIMEZONE}"
     log_info "Examples:"

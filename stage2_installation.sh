@@ -13,28 +13,28 @@ SSH_HARDENING_DIR="config/sshd_config.d/"
 MODE="${1}"
 DISK="${2}"
 
-pushd "${TEMP_DIR}" || exit 1
+pushd "${TEMP_DIR}" > /dev/null || exit 1
 
 # Logging the entire script
 exec 3>&1 4>&2 > >(tee -a "${LOG_FILE}") 2>&1
 
 # Sourcing log functions
 # you need to be in functions directory for this sourcing to work
-pushd functions || exit 1
+pushd functions > /dev/null || exit 1
 if ! source "${FUNCTIONS}"; then
   echo "Error! Could not source ${FUNCTIONS}"
   exit 1
 fi
-popd || exit 1
+popd > /dev/null || exit 1
 
 # Sourcing configuration file
 # you need to be in config directory for this sourcing to work
-pushd config || exit 1
+pushd config > /dev/null || exit 1
 if ! source "${CONFIG_FILE}"; then
   echo "Error! Could not source ${CONFIG_FILE}"
   exit 1
 fi
-popd || exit 1
+popd > /dev/null || exit 1
 
 DE_PACKAGES="packages/${DE}-packages.csv"
 
@@ -48,9 +48,9 @@ function check_config() {
     exit 1
   [ -z "${TIMEZONE}" ] && log_error "Variable TIMEZONE cannot be empty." && exit 1
   # all available time zones are in /usr/share/zoneinfo/
-  pushd /usr/share/zoneinfo/ || exit 1
+  pushd /usr/share/zoneinfo/ > /dev/null || exit 1
   TIMEZONES="$(find -mindepth 2 -maxdepth 2 -type f -printf "%P\n" | grep -v 'posix\|right\|Etc')"
-  popd || exit 1
+  popd > /dev/null || exit 1
   if ! echo "${TIMEZONES}" | grep "${TIMEZONE}"; then
     log_error "Variable TIMEZONE must be one from /usr/share/zoneinfo/. Set as: ${TIMEZONE}"
     log_info "Examples:"
@@ -285,15 +285,15 @@ function yay_install() {
   exit_on_error sudo -u "${NAME}" git -C "/home/${NAME}/.local" clone --depth 1 --single-branch \
     --no-tags -q "https://aur.archlinux.org/yay.git" "/home/${NAME}/.local/yay" ||
     {
-      pushd "/home/${NAME}/.local/yay" || exit 1
+      pushd "/home/${NAME}/.local/yay" > /dev/null || exit 1
       exit_on_error sudo -u "${NAME}" git pull --force origin master
-      popd || exit 1
+      popd > /dev/null || exit 1
     }
 
   log_info "Installing yay"
-  pushd "/home/${NAME}/.local/yay" || exit 1
+  pushd "/home/${NAME}/.local/yay" > /dev/null || exit 1
   exit_on_error sudo -u "${NAME}" makepkg --noconfirm -si || return 1
-  popd || exit 1
+  popd > /dev/null || exit 1
 
   # shellcheck disable=SC2046
   if [[ "${DESKTOP}" = "yes" ]] && [ -n "${DE}" ] && grep --quiet 'AUR' "${DE_PACKAGES}"; then
@@ -310,14 +310,14 @@ function apply_configuration() {
 
   log_info "Cloning the configuration repository"
   sudo -u "${NAME}" mkdir --parents "/home/${NAME}/git_clone"
-  pushd "/home/${NAME}/git_clone" || exit 1
+  pushd "/home/${NAME}/git_clone" > /dev/null || exit 1
   exit_on_error sudo -u "${NAME}" git clone https://github.com/arghpy/dotfiles .
-  popd || exit 1
+  popd > /dev/null || exit 1
 
   log_info "Cloning tmux plugin manager"
-  pushd "/home/${NAME}/" || exit 1
+  pushd "/home/${NAME}/" > /dev/null || exit 1
   exit_on_error sudo -u "${NAME}" git clone https://github.com/tmux-plugins/tpm .tmux/plugins/tpm
-  popd || exit 1
+  popd > /dev/null || exit 1
 
   log_info "Copying in configuration in ${NAME} home"
   sudo -u "${NAME}" cp --recursive "/home/${NAME}/git_clone/"* "/home/${NAME}/"
@@ -364,10 +364,10 @@ function configure_additional_packages() {
     mkdir -p /etc/lightdm/lightdm.conf.d
 
     # you need to be in functions directory for this sourcing to work
-    pushd config || exit 1
+    pushd config > /dev/null || exit 1
     sed "s|user_account|${NAME}|g" "${LIGHTDM_CONF}" > "/etc/lightdm/lightdm.conf.d/${LIGHTDM_CONF}"
     exit_on_error systemctl enable lightdm
-    popd || exit 1
+    popd > /dev/null || exit 1
 
     log_ok "DONE"
   elif [[ "${DE}" = "gnome" ]]; then
@@ -407,7 +407,7 @@ function main() {
   log_ok "DONE"
   exec 1>&3 2>&4
 
-  popd || exit 1
+  popd > /dev/null || exit 1
   log_info "Removing installation scripts"
   rm -rf "${TEMP_DIR}"
 

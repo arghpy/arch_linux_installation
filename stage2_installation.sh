@@ -43,6 +43,7 @@ if [ -z "${MODE}" ] || [ -z "${DISK}" ]; then
 fi
 
 function check_config() {
+  log_info "Checking configuration file ${CONFIG_FILE}"
   [ -z "${TIMEZONE+x}" ] &&
     log_error "Variable was not found in configuration file ${CONFIG_FILE}: TIMEZONE" &&
     exit 1

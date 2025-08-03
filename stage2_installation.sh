@@ -275,6 +275,16 @@ function apply_configuration() {
   log_ok "DONE"
 }
 
+function additional_tasks() {
+  log_info "Run additional tasks"
+
+  log_info "Update man database"
+  exit_on_error man-db
+
+  echo PASSED_ADDITIONAL_TASKS="PASSED" >> "${PASSED_ENV_VARS}"
+  log_ok "DONE"
+}
+
 # MAIN
 function main() {
   touch "${PASSED_ENV_VARS}"
@@ -294,6 +304,7 @@ function main() {
   [ -z "${PASSED_ENABLE_SERVICES+x}" ] && enable_services
 
   [ -z "${PASSED_APPLY_CONFIGURATION+x}" ] && apply_configuration
+  [ -z "${PASSES_ADDITIONAL_TASKS+x}" ] && additional_tasks
 
   log_ok "DONE"
   exec 1>&3 2>&4

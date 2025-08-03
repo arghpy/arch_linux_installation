@@ -11,6 +11,7 @@ htop,repo,Modern top utility
 linux,repo,Linux Kernel
 linux-firmware,repo,Firmware for different components
 lvm2,repo,Manage LVM
+man-db,repo,Man pages
 networkmanager,repo,Network Manager
 openssh,repo,SSH server
 pacman-contrib,repo,Additional scripts to use with pacman
